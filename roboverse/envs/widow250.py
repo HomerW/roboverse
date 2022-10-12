@@ -89,12 +89,6 @@ class Widow250Env(gym.Env, Serializable):
 
         self.gui = gui
 
-        # TODO(avi): This hard-coding should be removed
-        self.fc_input_key = 'state'
-        self.cnn_input_key = 'image'
-        self.terminates = False
-        self.scripted_traj_len = 30
-
         # TODO(avi): Add limits to ee orientation as well
         self.ee_pos_high = ee_pos_high
         self.ee_pos_low = ee_pos_low
@@ -203,7 +197,8 @@ class Widow250Env(gym.Env, Serializable):
         xyz_action = action[:3]  # ee position actions
         abc_action = action[3:6]  # ee orientation actions
         gripper_action = action[6]
-        neutral_action = action[7]
+        if self.use_neutral_action:
+            neutral_action = action[7]
 
         ee_pos, ee_quat = bullet.get_link_state(
             self.robot_id, self.end_effector_index)
@@ -343,7 +338,14 @@ class Widow250Env(gym.Env, Serializable):
             obs_bound = 100
             obs_high = np.ones(robot_state_dim) * obs_bound
             state_space = gym.spaces.Box(-obs_high, obs_high)
-            spaces = {'image': img_space, 'state': state_space}
+
+            obj_pos_space = gym.spaces.Box(np.array(self.object_position_low),
+                                           np.array(self.object_position_high))
+            obj_ori_space = gym.spaces.Box(np.zeros(4), np.ones(4))
+            spaces = {'image': img_space, 
+                      'state': state_space,
+                      'object_position': obj_pos_space,
+                      'object_orientation': obj_ori_space}
             self.observation_space = gym.spaces.Dict(spaces)
         else:
             raise NotImplementedError

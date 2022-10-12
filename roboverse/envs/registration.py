@@ -132,6 +132,24 @@ ENVIRONMENT_SPECS = (
     },
     # Pick and place environments
     {
+        'id': 'Widow250PickPlaceCube-v0',
+        'entry_point': 'roboverse.envs.widow250_pickplace:Widow250PickPlaceEnv',
+        'kwargs': {'reward_type': 'pick_place',
+                   'control_mode': 'discrete_gripper',
+                   'observation_img_dim': 128,
+                   'object_names': ('cube',),
+                   'object_scales': (0.04,),
+                   'target_object': 'cube',
+                   'load_tray': False,
+                   'object_position_high': (.72, 0.28, -.3),
+                   'object_position_low': (.48, 0.12, -.3),
+
+                   'container_name': 'tray',
+                   'fixed_container_position': True,
+
+                   }
+    },
+    {
         'id': 'Widow250PickPlaceEasy-v0',
         'entry_point': 'roboverse.envs.widow250_pickplace:Widow250PickPlaceEnv',
         'kwargs': {'reward_type': 'pick_place',

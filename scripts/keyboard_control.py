@@ -23,6 +23,7 @@ ENV_COMMANDS = {
 
 def keyboard_control(args):
     env = roboverse.make(args.env_name, gui=True)
+    env.reset()
 
     while True:
         take_action = False
@@ -45,6 +46,6 @@ def keyboard_control(args):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("-e", "--env-name", type=str,
-                        default='Widow250MultiTaskGrasp-v0')
+                        default='Widow250PickPlaceCube-v0')
     args = parser.parse_args()
     keyboard_control(args)
