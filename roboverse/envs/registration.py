@@ -1,6 +1,6 @@
 import gym
 from roboverse.assets.shapenet_object_lists \
-    import GRASP_TRAIN_OBJECTS, GRASP_TEST_OBJECTS, PICK_PLACE_TRAIN_OBJECTS, \
+    import GRASP_TRAIN_OBJECTS, GRASP_TEST_OBJECTS, OBJECT_SCALINGS, PICK_PLACE_TRAIN_OBJECTS, \
     PICK_PLACE_TEST_OBJECTS, TRAIN_CONTAINERS, TEST_CONTAINERS
 
 ENVIRONMENT_SPECS = (
@@ -134,20 +134,35 @@ ENVIRONMENT_SPECS = (
     {
         'id': 'Widow250PickPlaceCube-v0',
         'entry_point': 'roboverse.envs.widow250_pickplace:Widow250PickPlaceEnv',
-        'kwargs': {'reward_type': 'pick_place',
-                   'control_mode': 'discrete_gripper',
-                   'observation_img_dim': 128,
-                   'object_names': ('cube',),
-                   'object_scales': (0.04,),
-                   'target_object': 'cube',
-                   'load_tray': False,
-                   'object_position_high': (.72, 0.28, -.3),
-                   'object_position_low': (.48, 0.12, -.3),
-
-                   'container_name': 'tray',
-                   'fixed_container_position': True,
-
-                   }
+        'kwargs': {
+            'reward_type': 'pick_place',
+            'control_mode': 'discrete_gripper',
+            'observation_img_dim': 128,
+            'object_names': ('cube',),
+            'object_scales': (0.04,),
+            'target_object': 'cube',
+            'load_tray': False,
+            'object_position_high': (.72, 0.28, -.3),
+            'object_position_low': (.48, 0.12, -.3),
+            'container_name': 'tray',
+            'fixed_container_position': True,
+            'transpose_image': False,
+        }
+    },
+    {
+        'id': 'Widow250PickPlaceMultiObject-v0',
+        'entry_point': 'roboverse.envs.widow250:Widow250MultiObjectEnv',
+        'kwargs': {
+            'reward_type': 'pick_place',
+            'control_mode': 'discrete_gripper',
+            'observation_img_dim': 128,
+            'possible_objects': PICK_PLACE_TRAIN_OBJECTS,
+            'num_objects': 2,
+            'load_tray': False,
+            'object_position_low': (.5, .18, -.30),
+            'object_position_high': (.7, .27, -.30),
+            'transpose_image': False,
+        }
     },
     {
         'id': 'Widow250PickPlaceEasy-v0',
