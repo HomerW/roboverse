@@ -150,8 +150,27 @@ ENVIRONMENT_SPECS = (
         }
     },
     {
-        'id': 'Widow250PickPlaceMultiObject-v0',
-        'entry_point': 'roboverse.envs.widow250:Widow250MultiObjectEnv',
+        'id': 'Widow250PickPlacePosition-v0',
+        'entry_point': 'roboverse.envs.widow250_pickplace:Widow250PickPlacePositionEnv',
+        'kwargs': {
+            'reward_type': 'pick_place',
+            'control_mode': 'discrete_gripper',
+            'observation_img_dim': 128,
+            'object_names': ('shed', 'gatorade'),
+            'object_scales': [OBJECT_SCALINGS['shed'], OBJECT_SCALINGS['gatorade']],
+            'target_object': 'shed',
+            'load_tray': False,
+            'object_position_high': (.72, 0.28, -.3),
+            'object_position_low': (.48, 0.12, -.3),
+            'container_position_low': (.72, 0.28, -.3),
+            'container_position_high': (.48, 0.12, -.3),
+            'transpose_image': False,
+            'camera_yaw': 20
+        }
+    },
+    {
+        'id': 'Widow250PickPlacePositionMultiObject-v0',
+        'entry_point': 'roboverse.envs.widow250_pickplace:Widow250PickPlacePositionMultiObjectEnv',
         'kwargs': {
             'reward_type': 'pick_place',
             'control_mode': 'discrete_gripper',
@@ -159,8 +178,10 @@ ENVIRONMENT_SPECS = (
             'possible_objects': PICK_PLACE_TRAIN_OBJECTS,
             'num_objects': 2,
             'load_tray': False,
-            'object_position_low': (.5, .18, -.30),
-            'object_position_high': (.7, .27, -.30),
+            'object_position_high': (.72, 0.28, -.3),
+            'object_position_low': (.48, 0.12, -.3),
+            'container_position_low': (.72, 0.28, -.3),
+            'container_position_high': (.48, 0.12, -.3),
             'transpose_image': False,
         }
     },

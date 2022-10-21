@@ -5,6 +5,7 @@ from roboverse.envs import objects
 from .multi_object import MultiObjectEnv, MultiObjectMultiContainerEnv
 from roboverse.assets.shapenet_object_lists import CONTAINER_CONFIGS
 import os.path as osp
+import pybullet as p
 
 OBJECT_IN_GRIPPER_PATH = osp.join(osp.dirname(osp.dirname(osp.realpath(__file__))),
                 'assets/bullet-objects/bullet_saved_states/objects_in_gripper/')
@@ -128,19 +129,25 @@ class Widow250PickPlaceEnv(Widow250Env):
 class Widow250PickPlacePositionEnv(Widow250Env):
 
     def __init__(self,
-                 container_position_low=None,
-                 container_position_high=None,
-                 min_distance_from_object=None,
-                 place_success_radius_threshold=None,
+                 container_position_low=(.72, 0.28, -.3),
+                 container_position_high=(.48, 0.12, -.3),
+                 container_position_z=-0.37,
+                 min_distance_from_object=0.11,
+                 place_success_height_threshold=-0.32,
+                 place_success_radius_threshold=0.04,
                  start_object_in_gripper=False,
+                 show_place_target=False,
                  **kwargs
                  ):
         self.container_position_low = container_position_low
         self.container_position_high = container_position_high
+        self.container_position_z = container_position_z
         self.min_distance_from_object = min_distance_from_object
+        self.place_success_height_threshold = place_success_height_threshold
         self.place_success_radius_threshold = place_success_radius_threshold
         self.start_object_in_gripper = start_object_in_gripper
-        super(Widow250PickPlaceEnv, self).__init__(**kwargs)
+        self.show_place_target = show_place_target
+        super(Widow250PickPlacePositionEnv, self).__init__(**kwargs)
 
     def _load_meshes(self):
         self.table_id = objects.table()
@@ -173,6 +180,14 @@ class Widow250PickPlacePositionEnv(Widow250Env):
 
         # TODO(avi) Need to clean up
         self.container_position[-1] = self.container_position_z
+        if self.show_place_target:
+            visualShapeId = p.createVisualShape(shapeType=p.GEOM_CYLINDER,
+                                                rgbaColor=[1, 1, 1, 1],
+                                                length=0.001,
+                                                radius=self.place_success_radius_threshold)
+            p.createMultiBody(baseVisualShapeIndex=visualShapeId,
+                              basePosition=self.container_position)
+        bullet.step_simulation(self.num_sim_steps_reset)
         for object_name, object_position in zip(self.object_names,
                                                 self.original_object_positions):
             self.objects[object_name] = object_utils.load_object(
@@ -183,7 +198,7 @@ class Widow250PickPlacePositionEnv(Widow250Env):
             bullet.step_simulation(self.num_sim_steps_reset)
 
     def reset(self):
-        super(Widow250PickPlaceEnv, self).reset()
+        super(Widow250PickPlacePositionEnv, self).reset()
         ee_pos_init, ee_quat_init = bullet.get_link_state(
             self.robot_id, self.end_effector_index)
         ee_pos_init[2] -= 0.05
@@ -205,7 +220,7 @@ class Widow250PickPlacePositionEnv(Widow250Env):
         return reward
 
     def get_info(self):
-        info = super(Widow250PickPlaceEnv, self).get_info()
+        info = super(Widow250PickPlacePositionEnv, self).get_info()
 
         info['place_success'] = False
         for object_name in self.object_names:
@@ -227,6 +242,8 @@ class Widow250PickPlacePositionEnv(Widow250Env):
 class Widow250PickPlaceMultiObjectEnv(MultiObjectEnv, Widow250PickPlaceEnv):
     """Grasping Env but with a random object each time."""
 
+class Widow250PickPlacePositionMultiObjectEnv(MultiObjectEnv, Widow250PickPlacePositionEnv):
+    """Grasping Env but with a random object each time."""
 
 class Widow250PickPlaceMultiObjectMultiContainerEnv(
     MultiObjectMultiContainerEnv, Widow250PickPlaceEnv):
