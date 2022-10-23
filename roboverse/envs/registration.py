@@ -156,8 +156,8 @@ ENVIRONMENT_SPECS = (
             'reward_type': 'pick_place',
             'control_mode': 'discrete_gripper',
             'observation_img_dim': 128,
-            'object_names': ('shed', 'gatorade'),
-            'object_scales': [OBJECT_SCALINGS['shed'], OBJECT_SCALINGS['gatorade']],
+            'object_names': ('shed', 'fountain_vase'),
+            'object_scales': [OBJECT_SCALINGS['shed'], OBJECT_SCALINGS['fountain_vase']],
             'target_object': 'shed',
             'load_tray': False,
             'object_position_high': (.72, 0.28, -.3),
@@ -165,7 +165,8 @@ ENVIRONMENT_SPECS = (
             'container_position_low': (.72, 0.28, -.3),
             'container_position_high': (.48, 0.12, -.3),
             'transpose_image': False,
-            'camera_yaw': 20
+            'camera_yaw': 20,
+            # 'show_place_target': True
         }
     },
     {
@@ -183,6 +184,7 @@ ENVIRONMENT_SPECS = (
             'container_position_low': (.72, 0.28, -.3),
             'container_position_high': (.48, 0.12, -.3),
             'transpose_image': False,
+            'camera_yaw': 20,
         }
     },
     {

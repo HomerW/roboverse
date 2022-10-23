@@ -19,17 +19,22 @@ class MultiObjectEnv:
         super().__init__(**kwargs)
         self.num_objects = num_objects
 
-    def reset(self):
-        chosen_obj_idx = np.random.randint(0, len(self.possible_objects),
-                                           size=self.num_objects)
-        self.object_names = tuple(self.possible_objects[chosen_obj_idx])
+    def reset(self, object_names=None, target_object=None, **kwargs):
+        if object_names is None or target_object is None:
+            chosen_obj_idx = np.random.randint(0, len(self.possible_objects),
+                                            size=self.num_objects)
+            self.object_names = tuple(self.possible_objects[chosen_obj_idx])
+            self.target_object = self.object_names[0]
+        else:
+            assert target_object in object_names
+            self.object_names = object_names
+            self.target_object = target_object
 
         self.object_scales = dict()
         self.object_orientations = dict()
         for object_name in self.object_names:
             self.object_orientations[object_name] = OBJECT_ORIENTATIONS[object_name]
             self.object_scales[object_name] = OBJECT_SCALINGS[object_name]
-        self.target_object = self.object_names[0]
         return super().reset()
 
 
