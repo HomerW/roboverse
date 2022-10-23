@@ -149,7 +149,7 @@ class Widow250PickPlacePositionEnv(Widow250Env):
         self.show_place_target = show_place_target
         super(Widow250PickPlacePositionEnv, self).__init__(**kwargs)
 
-    def _load_meshes(self):
+    def _load_meshes(self, original_object_positions=None, target_position=None, **kwargs):
         self.table_id = objects.table()
         self.robot_id = objects.widow250()
         self.objects = {}
@@ -160,23 +160,27 @@ class Widow250PickPlacePositionEnv(Widow250Env):
         """
         assert self.container_position_low[2] == self.object_position_low[2]
 
-        if self.num_objects == 2:
-            self.container_position, self.original_object_positions = \
-                object_utils.generate_object_positions_v2(
-                    self.object_position_low, self.object_position_high,
-                    self.container_position_low, self.container_position_high,
-                    min_distance_small_obj=0.07,
-                    min_distance_large_obj=self.min_distance_from_object,
-                )
-        elif self.num_objects == 1:
-            self.container_position, self.original_object_positions = \
-                object_utils.generate_object_positions_single(
-                    self.object_position_low, self.object_position_high,
-                    self.container_position_low, self.container_position_high,
-                    min_distance_large_obj=self.min_distance_from_object,
-                )
+        if original_object_positions is None or target_position is None:
+            if self.num_objects == 2:
+                self.container_position, self.original_object_positions = \
+                    object_utils.generate_object_positions_v2(
+                        self.object_position_low, self.object_position_high,
+                        self.container_position_low, self.container_position_high,
+                        min_distance_small_obj=0.07,
+                        min_distance_large_obj=self.min_distance_from_object,
+                    )
+            elif self.num_objects == 1:
+                self.container_position, self.original_object_positions = \
+                    object_utils.generate_object_positions_single(
+                        self.object_position_low, self.object_position_high,
+                        self.container_position_low, self.container_position_high,
+                        min_distance_large_obj=self.min_distance_from_object,
+                    )
+            else:
+                raise NotImplementedError
         else:
-            raise NotImplementedError
+            self.container_position = target_position
+            self.original_object_positions = original_object_positions
 
         # TODO(avi) Need to clean up
         self.container_position[-1] = self.container_position_z
@@ -197,8 +201,8 @@ class Widow250PickPlacePositionEnv(Widow250Env):
                 scale=self.object_scales[object_name])
             bullet.step_simulation(self.num_sim_steps_reset)
 
-    def reset(self):
-        super(Widow250PickPlacePositionEnv, self).reset()
+    def reset(self, **kwargs):
+        super(Widow250PickPlacePositionEnv, self).reset(**kwargs)
         ee_pos_init, ee_quat_init = bullet.get_link_state(
             self.robot_id, self.end_effector_index)
         ee_pos_init[2] -= 0.05
@@ -235,6 +239,11 @@ class Widow250PickPlacePositionEnv(Widow250Env):
             self.target_object, self.objects, self.container_position,
             self.place_success_height_threshold,
             self.place_success_radius_threshold)
+        
+        info['object_names'] = self.object_names
+        info['target_object'] = self.target_object
+        info['initial_positions'] = self.original_object_positions
+        info['target_position'] = self.container_position
 
         return info
 

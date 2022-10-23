@@ -173,10 +173,10 @@ class Widow250Env(gym.Env, Serializable):
                 scale=self.object_scales[object_name])
             bullet.step_simulation(self.num_sim_steps_reset)
 
-    def reset(self):
+    def reset(self, **kwargs):
         bullet.reset()
         bullet.setup_headless()
-        self._load_meshes()
+        self._load_meshes(**kwargs)
         bullet.reset_robot(
             self.robot_id,
             self.reset_joint_indices,
