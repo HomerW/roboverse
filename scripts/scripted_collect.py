@@ -6,21 +6,26 @@ import roboverse
 from roboverse.policies import policies
 import argparse
 from tqdm import tqdm
+import h5py
 
 from roboverse.utils import get_timestamp
+
 EPSILON = 0.1
 
 # TODO(avi): Clean this up
-NFS_PATH = '/nfs/kun1/users/avi/imitation_datasets/'
+NFS_PATH = "/nfs/kun1/users/avi/imitation_datasets/"
 
 
-def add_transition(traj, observation, action, reward, info, agent_info, done,
-                   next_observation, img_dim):
-    observation["image"] = np.reshape(np.uint8(observation["image"] * 255.),
-                                      (img_dim, img_dim, 3))
+def add_transition(
+    traj, observation, action, reward, info, agent_info, done, next_observation, img_dim
+):
+    observation["image"] = np.reshape(
+        np.uint8(observation["image"] * 255.0), (img_dim, img_dim, 3)
+    )
     traj["observations"].append(observation)
     next_observation["image"] = np.reshape(
-        np.uint8(next_observation["image"] * 255.), (img_dim, img_dim, 3))
+        np.uint8(next_observation["image"] * 255.0), (img_dim, img_dim, 3)
+    )
     traj["next_observations"].append(next_observation)
     traj["actions"].append(action)
     traj["rewards"].append(reward)
@@ -30,8 +35,7 @@ def add_transition(traj, observation, action, reward, info, agent_info, done,
     return traj
 
 
-def collect_one_traj(env, policy, num_timesteps, noise,
-                     accept_trajectory_key):
+def collect_one_traj(env, policy, num_timesteps, noise, accept_trajectory_key):
     num_steps = -1
     rewards = []
     success = False
@@ -60,14 +64,23 @@ def collect_one_traj(env, policy, num_timesteps, noise,
         action = np.clip(action, -1 + EPSILON, 1 - EPSILON)
         observation = env.get_observation()
         next_observation, reward, done, info = env.step(action)
-        add_transition(traj, observation,  action, reward, info, agent_info,
-                       done, next_observation, img_dim)
+        add_transition(
+            traj,
+            observation,
+            action,
+            reward,
+            info,
+            agent_info,
+            done,
+            next_observation,
+            img_dim,
+        )
 
         if info[accept_trajectory_key] and num_steps < 0:
             num_steps = j
 
         rewards.append(reward)
-        if done or agent_info['done']:
+        if done or agent_info["done"]:
             break
 
     if info[accept_trajectory_key]:
@@ -87,14 +100,15 @@ def main(args):
     if not osp.exists(data_save_path):
         os.makedirs(data_save_path)
 
-    env = roboverse.make(args.env_name,
-                         gui=args.gui,
-                         transpose_image=False)
+    env = roboverse.make(args.env_name, gui=args.gui, transpose_image=False)
 
     data = []
-    assert args.policy_name in policies.keys(), f"The policy name must be one of: {policies.keys()}"
-    assert args.accept_trajectory_key in env.get_info().keys(), \
-        f"""The accept trajectory key must be one of: {env.get_info().keys()}"""
+    assert (
+        args.policy_name in policies.keys()
+    ), f"The policy name must be one of: {policies.keys()}"
+    assert (
+        args.accept_trajectory_key in env.get_info().keys()
+    ), f"""The accept trajectory key must be one of: {env.get_info().keys()}"""
     policy_class = policies[args.policy_name]
     policy = policy_class(env)
     num_success = 0
@@ -107,8 +121,8 @@ def main(args):
     while num_saved < args.num_trajectories:
         num_attempts += 1
         traj, success, num_steps = collect_one_traj(
-            env, policy, args.num_timesteps, args.noise,
-            accept_trajectory_key)
+            env, policy, args.num_timesteps, args.noise, accept_trajectory_key
+        )
 
         if success:
             if args.gui:
@@ -123,14 +137,28 @@ def main(args):
             progress_bar.update(1)
 
         if args.gui:
-            print("success rate: {}".format(num_success/(num_attempts)))
+            print("success rate: {}".format(num_success / (num_attempts)))
 
     progress_bar.close()
     print("success rate: {}".format(num_success / (num_attempts)))
-    path = osp.join(data_save_path, "scripted_{}_{}.npy".format(
-        args.env_name, timestamp))
+
+    path = osp.join(
+        data_save_path, "scripted_{}_{}.hdf5".format(args.env_name, timestamp)
+    )
     print(path)
-    np.save(path, data)
+    with h5py.File(path, "w") as f:
+        f["observations/image"] = np.array([o["image"] for t in data for o in t["observations"]])
+        f["next_observations/image"] = np.array([o["image"] for t in data for o in t["next_observations"]])
+        f["actions"] = np.array([a for t in data for a in t["actions"]], dtype=np.float32)
+        f["terminals"] = np.zeros(f["actions"].shape[0], dtype=np.bool_)
+        f["truncates"] = np.zeros(f["actions"].shape[0], dtype=np.bool_)
+        f["steps_remaining"] = np.zeros(f["actions"].shape[0], dtype=np.uint32)
+        end = 0
+        for traj in data:
+            start = end
+            end += len(traj["actions"])
+            f["truncates"][end - 1] = True
+            f["steps_remaining"][start:end] = np.arange(end - start)[::-1]
 
 
 if __name__ == "__main__":
@@ -141,8 +169,8 @@ if __name__ == "__main__":
     parser.add_argument("-a", "--accept-trajectory-key", type=str, required=True)
     parser.add_argument("-n", "--num-trajectories", type=int, required=True)
     parser.add_argument("-t", "--num-timesteps", type=int, required=True)
-    parser.add_argument("--save-all", action='store_true', default=False)
-    parser.add_argument("--gui", action='store_true', default=False)
+    parser.add_argument("--save-all", action="store_true", default=False)
+    parser.add_argument("--gui", action="store_true", default=False)
     parser.add_argument("-o", "--target-object", type=str)
     parser.add_argument("-d", "--save-directory", type=str, default="")
     parser.add_argument("--noise", type=float, default=0.1)

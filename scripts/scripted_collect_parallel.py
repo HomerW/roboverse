@@ -72,9 +72,9 @@ if __name__ == "__main__":
 
     exit_codes = [p.wait() for p in subprocesses]
 
-    merge_command = ['python',
-                     'scripts/combine_trajectories.py',
-                     '-d{}'.format(save_directory)]
+    # merge_command = ['python',
+    #                  'scripts/combine_trajectories.py',
+    #                  '-d{}'.format(save_directory)]
 
-    subprocess.call(merge_command)
+    # subprocess.call(merge_command)
 
