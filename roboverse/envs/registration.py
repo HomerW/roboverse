@@ -176,8 +176,7 @@ ENVIRONMENT_SPECS = (
             'reward_type': 'pick_place',
             'control_mode': 'discrete_gripper',
             'observation_img_dim': 128,
-            # 'possible_objects': PICK_PLACE_TRAIN_OBJECTS,
-            'possible_objects': ['shed', 'fountain_vase'],
+            'possible_objects': PICK_PLACE_TRAIN_OBJECTS[:8],
             'num_objects': 2,
             'load_tray': False,
             'object_position_high': (.72, 0.28, -.3),
@@ -186,6 +185,26 @@ ENVIRONMENT_SPECS = (
             'container_position_high': (.48, 0.12, -.3),
             'transpose_image': False,
             # 'camera_yaw': 20,
+            # 'show_place_target': True
+        }
+    },
+    {
+        'id': 'Widow250PickPlacePositionMultiObjectTest-v0',
+        'entry_point': 'roboverse.envs.widow250_pickplace:Widow250PickPlacePositionMultiObjectEnv',
+        'kwargs': {
+            'reward_type': 'pick_place',
+            'control_mode': 'discrete_gripper',
+            'observation_img_dim': 128,
+            'possible_objects': PICK_PLACE_TEST_OBJECTS[:4],
+            'num_objects': 2,
+            'load_tray': False,
+            'object_position_high': (.72, 0.28, -.3),
+            'object_position_low': (.48, 0.12, -.3),
+            'container_position_low': (.72, 0.28, -.3),
+            'container_position_high': (.48, 0.12, -.3),
+            'transpose_image': False,
+            # 'camera_yaw': 20,
+            # 'show_place_target': True
         }
     },
     {

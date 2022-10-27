@@ -134,7 +134,7 @@ class Widow250PickPlacePositionEnv(Widow250Env):
                  container_position_z=-0.37,
                  min_distance_from_object=0.11,
                  place_success_height_threshold=-0.32,
-                 place_success_radius_threshold=0.04,
+                 place_success_radius_threshold=0.05,
                  start_object_in_gripper=False,
                  show_place_target=False,
                  **kwargs
