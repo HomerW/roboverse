@@ -21,9 +21,9 @@ class MultiObjectEnv:
 
     def reset(self, object_names=None, target_object=None, **kwargs):
         if object_names is None or target_object is None:
-            chosen_obj_idx = np.random.randint(0, len(self.possible_objects),
-                                            size=self.num_objects)
-            self.object_names = tuple(self.possible_objects[chosen_obj_idx])
+            chosen_obj_idx = np.random.choice(np.arange((len(self.possible_objects))),
+                size=self.num_objects, replace=False)
+            self.object_names = tuple(self.possible_objects[chosen_obj_idx].tolist())
             self.target_object = self.object_names[0]
         else:
             assert target_object in object_names

@@ -147,11 +147,13 @@ def main(args):
     )
     print(path)
     with h5py.File(path, "w") as f:
-        f["observations/image"] = np.array([o["image"] for t in data for o in t["observations"]])
-        f["next_observations/image"] = np.array([o["image"] for t in data for o in t["next_observations"]])
+        f["observations/images0"] = np.array([o["image"] for t in data for o in t["observations"]])
+        f["next_observations/images0"] = np.array([o["image"] for t in data for o in t["next_observations"]])
         f["actions"] = np.array([a for t in data for a in t["actions"]], dtype=np.float32)
         f["terminals"] = np.zeros(f["actions"].shape[0], dtype=np.bool_)
         f["truncates"] = np.zeros(f["actions"].shape[0], dtype=np.bool_)
+        for key in data[0]['env_infos'][0]:
+            f[f"infos/{key}"] = [i[key] for t in data for i in t['env_infos']]
         f["steps_remaining"] = np.zeros(f["actions"].shape[0], dtype=np.uint32)
         end = 0
         for traj in data:

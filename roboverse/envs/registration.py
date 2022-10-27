@@ -165,7 +165,7 @@ ENVIRONMENT_SPECS = (
             'container_position_low': (.72, 0.28, -.3),
             'container_position_high': (.48, 0.12, -.3),
             'transpose_image': False,
-            'camera_yaw': 20,
+            # 'camera_yaw': 20,
             # 'show_place_target': True
         }
     },
@@ -176,7 +176,8 @@ ENVIRONMENT_SPECS = (
             'reward_type': 'pick_place',
             'control_mode': 'discrete_gripper',
             'observation_img_dim': 128,
-            'possible_objects': PICK_PLACE_TRAIN_OBJECTS,
+            # 'possible_objects': PICK_PLACE_TRAIN_OBJECTS,
+            'possible_objects': ['shed', 'fountain_vase'],
             'num_objects': 2,
             'load_tray': False,
             'object_position_high': (.72, 0.28, -.3),
@@ -184,7 +185,7 @@ ENVIRONMENT_SPECS = (
             'container_position_low': (.72, 0.28, -.3),
             'container_position_high': (.48, 0.12, -.3),
             'transpose_image': False,
-            'camera_yaw': 20,
+            # 'camera_yaw': 20,
         }
     },
     {
