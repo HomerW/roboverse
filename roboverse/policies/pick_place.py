@@ -2,19 +2,21 @@ import numpy as np
 import roboverse.bullet as bullet
 
 from roboverse.assets.shapenet_object_lists import GRASP_OFFSETS
+from roboverse.envs.widow250 import NEUTRAL_POS
 from .drawer_open_transfer import DrawerOpenTransfer
 
 
 class PickPlace:
 
     def __init__(self, env, pick_height_thresh=-0.31, xyz_action_scale=7.0,
-                 pick_point_noise=0.00, drop_point_noise=0.00):
+                 pick_point_noise=0.00, drop_point_noise=0.00, use_neutral_action=False):
         self.env = env
         self.pick_height_thresh_noisy = (
             pick_height_thresh + np.random.normal(scale=0.01))
         self.xyz_action_scale = xyz_action_scale
         self.pick_point_noise = pick_point_noise
         self.drop_point_noise = drop_point_noise
+        self.use_neutral_action = use_neutral_action
         self.reset()
 
     def reset(self):
@@ -41,8 +43,8 @@ class PickPlace:
         done = False
 
         if self.place_attempted:
-            # Avoid pick and place the object again after one attempt
-            action_xyz = [0., 0., 0.]
+            # move to neutral
+            action_xyz = (NEUTRAL_POS - ee_pos) * self.xyz_action_scale
             action_angles = [0., 0., 0.]
             action_gripper = [0.]
         elif gripper_pickpoint_dist > 0.02 and self.env.is_gripper_open:
@@ -76,9 +78,14 @@ class PickPlace:
             self.place_attempted = True
 
         agent_info = dict(place_attempted=self.place_attempted, done=done)
-        neutral_action = [0.]
-        action = np.concatenate(
-            (action_xyz, action_angles, action_gripper, neutral_action))
+        if self.use_neutral_action:
+            neutral_action = [0.]
+            action = np.concatenate(
+                (action_xyz, action_angles, action_gripper, neutral_action))
+        else:
+            neutral_action = [0.]
+            action = np.concatenate(
+                (action_xyz, action_angles, action_gripper))
         return action, agent_info
 
 
