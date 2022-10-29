@@ -35,7 +35,7 @@ class MultiObjectEnv:
         for object_name in self.object_names:
             self.object_orientations[object_name] = OBJECT_ORIENTATIONS[object_name]
             self.object_scales[object_name] = OBJECT_SCALINGS[object_name]
-        return super().reset()
+        return super().reset(**kwargs)
 
 
 class MultiObjectMultiContainerEnv:
