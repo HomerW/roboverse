@@ -154,6 +154,9 @@ class Widow250PickPlacePositionEnv(Widow250Env):
         self.robot_id = objects.widow250()
         self.objects = {}
 
+        if self.load_tray:
+            self.tray_id = objects.tray_no_divider_scaled()
+
         """
         TODO(avi) This needs to be cleaned up, generate function should only
                   take in (x,y) positions instead.

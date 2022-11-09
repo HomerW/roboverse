@@ -169,6 +169,9 @@ def load_object(object_name, object_position, object_quat, scale=1.0):
                                   basePosition=object_position,
                                   baseOrientation=object_quat,
                                   globalScaling=scale)
+    elif object_name in PROGRAMMATIC_OBJECT_SPECS.keys():
+        return load_programmatic_object(object_name, object_position,
+                                        object_quat=object_quat)
     else:
         print(object_name)
         raise NotImplementedError
@@ -204,6 +207,15 @@ def load_bullet_object(object_name, **kwargs):
     object_specs.update(**kwargs)
     object_id = p.loadURDF(**object_specs)
     return object_id
+
+def load_programmatic_object(object_name, object_position,
+                             object_quat=(1, -1, 0, 0)):  
+    object_specs = PROGRAMMATIC_OBJECT_SPECS[object_name] 
+    collisionid = p.createCollisionShape(**object_specs["collision"])
+    visualid = p.createVisualShape(**object_specs["visual"])
+    body = p.createMultiBody(0.05, collisionid, visualid)
+    p.resetBasePositionAndOrientation(body, object_position, object_quat)
+    return body
 
 
 # TODO(avi) Maybe move this to a different file
@@ -340,4 +352,20 @@ BULLET_OBJECT_SPECS = dict(
         baseOrientation=(0, 0, 0.707107, 0.707107),
         globalScaling=0.1,
     ),
+)
+
+PROGRAMMATIC_OBJECT_SPECS = dict(
+    blue_cylinder=dict(
+        visual=dict(
+            shapeType=p.GEOM_CYLINDER,
+            rgbaColor=[0, 0, 1, 1],
+            length=0.1,
+            radius=0.05,
+        ),
+        collision=dict(
+            shapeType=p.GEOM_CYLINDER,
+            length=0.1,
+            radius=0.05,
+        )
+    )
 )

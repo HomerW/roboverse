@@ -30,6 +30,24 @@ def tray(base_position=(.60, 0.3, -.37), scale=0.5):
                          globalScaling=scale)
     return tray_id
 
+def tray_no_divider(base_position=(.60, 0.25, -.37), scale=0.6):
+    p.setAdditionalSearchPath(pybullet_data.getDataPath())
+    BASE_ASSET_PATH = os.path.join(ASSET_PATH, 'bullet-objects')
+    tray_id = p.loadURDF(os.path.join(BASE_ASSET_PATH, 'tray/tray_no_divider.urdf'),
+                         basePosition=base_position,
+                         baseOrientation=[0, 0, 0.707107, 0.707107],
+                         globalScaling=scale)
+    return tray_id
+
+def tray_no_divider_scaled(base_position=(.60, 0.2, -.37), scale=0.6):
+    p.setAdditionalSearchPath(pybullet_data.getDataPath())
+    BASE_ASSET_PATH = os.path.join(ASSET_PATH, 'bullet-objects')
+    tray_id = p.loadURDF(os.path.join(BASE_ASSET_PATH, 'tray/tray_no_divider_scaled.urdf'),
+                         basePosition=base_position,
+                         baseOrientation=[0, 0, 0.707107, 0.707107],
+                         globalScaling=scale)
+    return tray_id
+
 
 def widow250():
     widow250_path = os.path.join(ASSET_PATH,
