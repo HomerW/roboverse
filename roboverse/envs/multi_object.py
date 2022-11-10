@@ -11,13 +11,11 @@ class MultiObjectEnv:
     every time the env resets.
     """
     def __init__(self,
-                 num_objects=1,
                  possible_objects=TRAIN_OBJECTS[:10],
                  **kwargs):
         assert isinstance(possible_objects, list)
         self.possible_objects = np.asarray(possible_objects)
         super().__init__(**kwargs)
-        self.num_objects = num_objects
 
     def reset(self, object_names=None, target_object=None, **kwargs):
         if object_names is None or target_object is None:

@@ -160,12 +160,13 @@ ENVIRONMENT_SPECS = (
             'object_scales': [OBJECT_SCALINGS['shed'], OBJECT_SCALINGS['fountain_vase']],
             'target_object': 'shed',
             'load_tray': True,
-            'object_position_high': (.72, 0.28, -.3),
-            'object_position_low': (.48, 0.12, -.3),
-            'container_position_low': (.72, 0.28, -.3),
-            'container_position_high': (.48, 0.12, -.3),
+            'object_position_high': (.72, 0.33, -.3),
+            'object_position_low': (.48, 0.17, -.3),
+            'container_position_low': (.72, 0.33, -.3),
+            'container_position_high': (.48, 0.17, -.3),
             'transpose_image': False,
             # 'camera_yaw': 20,
+            'camera_distance': 0.37,
             # 'show_place_target': True
         }
     },
@@ -179,15 +180,16 @@ ENVIRONMENT_SPECS = (
             'possible_objects': PICK_PLACE_TRAIN_OBJECTS[:8],
             'num_objects': 2,
             'load_tray': True,
-            'object_position_high': (.72, 0.28, -.3),
-            'object_position_low': (.48, 0.12, -.3),
-            'container_position_low': (.72, 0.28, -.3),
-            'container_position_high': (.48, 0.12, -.3),
+            'object_position_high': (.72, 0.33, -.3),
+            'object_position_low': (.48, 0.17, -.3),
+            'container_position_low': (.72, 0.33, -.3),
+            'container_position_high': (.48, 0.17, -.3),
             'transpose_image': False,
             # 'camera_yaw': 20,
             # 'camera_target_pos': (0.6, 0.2, -0.2),
             # 'camera_pitch': -50
-            # 'show_place_target': True
+            'camera_distance': 0.37,
+            'show_place_target': True
         }
     },
     {

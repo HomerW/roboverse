@@ -6,6 +6,7 @@ import numpy as np
 from .control import get_object_position, get_link_state
 from roboverse.bullet.drawer_utils import *
 from roboverse.bullet.button_utils import *
+from itertools import combinations
 
 CUR_PATH = os.path.dirname(os.path.realpath(__file__))
 ASSET_PATH = os.path.join(CUR_PATH, '../assets')
@@ -80,6 +81,36 @@ def generate_object_positions_single(
 
     return large_object_position, small_object_positions
 
+
+def generate_object_positions_v3(
+    num_objects, object_position_low, object_position_high, 
+    target_position_low, target_position_high, 
+    min_distance=0.07, min_distance_target=0.1):
+
+    valid = False
+    max_attempts = MAX_ATTEMPTS_TO_GENERATE_OBJECT_POSITIONS
+    i = 0
+    while not valid:
+        target_position = np.random.uniform(
+                low=target_position_low, high=target_position_high)
+        object_positions = []
+        for _ in range(num_objects):
+            object_position = np.random.uniform(
+                low=object_position_low, high=object_position_high)
+            object_positions.append(object_position)
+
+        valid = True
+        for (pos1, pos2) in combinations(object_positions, r=2):
+            valid = valid and \
+                np.linalg.norm(pos1 - pos2) > min_distance
+        for pos in object_positions:
+            valid = valid and \
+                np.linalg.norm(pos - target_position) > min_distance_target
+
+        if i > max_attempts:
+            raise ValueError('Min distance could not be assured')
+
+    return target_position, object_positions
 
 def generate_object_positions_v2(
         small_object_position_low, small_object_position_high,

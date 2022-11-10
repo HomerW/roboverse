@@ -26,9 +26,9 @@ class PickPlace:
             self.env.objects[self.object_to_target])[0]
         if self.object_to_target in GRASP_OFFSETS.keys():
             self.pick_point += np.asarray(GRASP_OFFSETS[self.object_to_target])
-        self.pick_point[2] = -0.32
+        self.pick_point[2] = -0.31
         self.drop_point = self.env.container_position
-        self.drop_point[2] = -0.3
+        self.drop_point[2] = -0.29
         self.place_attempted = False
         self.object_lifted = False
 
@@ -92,7 +92,6 @@ class PickPlace:
             action = np.concatenate(
                 (action_xyz, action_angles, action_gripper, neutral_action))
         else:
-            neutral_action = [0.]
             action = np.concatenate(
                 (action_xyz, action_angles, action_gripper))
         return action, agent_info

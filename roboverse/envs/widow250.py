@@ -33,6 +33,7 @@ class Widow250Env(gym.Env, Serializable):
                  transpose_image=True,
 
                  object_names=('beer_bottle', 'gatorade'),
+                 num_objects=None,
                  object_scales=(0.75, 0.75),
                  object_orientations=((0, 0, 1, 0), (0, 0, 1, 0)),
                  object_position_high=(.7, .27, -.30),
@@ -96,7 +97,10 @@ class Widow250Env(gym.Env, Serializable):
         assert target_object in object_names
         assert len(object_names) == len(object_scales)
         self.load_tray = load_tray
-        self.num_objects = len(object_names)
+        if num_objects is None:
+            self.num_objects = len(object_names)
+        else:
+            self.num_objects = num_objects
         self.object_position_high = list(object_position_high)
         self.object_position_low = list(object_position_low)
         self.object_names = object_names

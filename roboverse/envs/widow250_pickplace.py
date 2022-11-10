@@ -131,7 +131,7 @@ class Widow250PickPlacePositionEnv(Widow250Env):
     def __init__(self,
                  container_position_low=(.72, 0.28, -.3),
                  container_position_high=(.48, 0.12, -.3),
-                 container_position_z=-0.37,
+                 container_position_z=-0.36,
                  min_distance_from_object=0.11,
                  place_success_height_threshold=-0.32,
                  place_success_radius_threshold=0.05,
@@ -164,23 +164,12 @@ class Widow250PickPlacePositionEnv(Widow250Env):
         assert self.container_position_low[2] == self.object_position_low[2]
 
         if original_object_positions is None or target_position is None:
-            if self.num_objects == 2:
-                self.container_position, self.original_object_positions = \
-                    object_utils.generate_object_positions_v2(
-                        self.object_position_low, self.object_position_high,
-                        self.container_position_low, self.container_position_high,
-                        min_distance_small_obj=0.07,
-                        min_distance_large_obj=self.min_distance_from_object,
-                    )
-            elif self.num_objects == 1:
-                self.container_position, self.original_object_positions = \
-                    object_utils.generate_object_positions_single(
-                        self.object_position_low, self.object_position_high,
-                        self.container_position_low, self.container_position_high,
-                        min_distance_large_obj=self.min_distance_from_object,
-                    )
-            else:
-                raise NotImplementedError
+            self.container_position, self.original_object_positions = \
+                object_utils.generate_object_positions_v3(
+                    self.num_objects, self.object_position_low, self.object_position_high,
+                    self.container_position_low, self.container_position_high,
+                    min_distance_target=self.min_distance_from_object
+                )
         else:
             self.container_position = target_position
             self.original_object_positions = original_object_positions
