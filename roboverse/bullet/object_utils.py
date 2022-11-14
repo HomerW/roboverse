@@ -390,13 +390,13 @@ PROGRAMMATIC_OBJECT_SPECS = dict(
         visual=dict(
             shapeType=p.GEOM_CYLINDER,
             rgbaColor=[0, 0, 1, 1],
-            length=0.1,
-            radius=0.05,
+            length=0.05,
+            radius=0.03,
         ),
         collision=dict(
             shapeType=p.GEOM_CYLINDER,
-            length=0.1,
-            radius=0.05,
+            height=0.05,
+            radius=0.03,
         )
     )
 )
