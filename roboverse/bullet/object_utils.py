@@ -200,7 +200,7 @@ def load_object(object_name, object_position, object_quat, scale=1.0):
                                   basePosition=object_position,
                                   baseOrientation=object_quat,
                                   globalScaling=scale)
-    elif object_name in PROGRAMMATIC_OBJECT_SPECS.keys():
+    elif object_name in CYLINDER_COLORS.keys():
         return load_programmatic_object(object_name, object_position,
                                         object_quat=object_quat)
     else:
@@ -241,11 +241,12 @@ def load_bullet_object(object_name, **kwargs):
 
 def load_programmatic_object(object_name, object_position,
                              object_quat=(1, -1, 0, 0)):  
-    object_specs = PROGRAMMATIC_OBJECT_SPECS[object_name] 
-    collisionid = p.createCollisionShape(**object_specs["collision"])
-    visualid = p.createVisualShape(**object_specs["visual"])
+    collisionid = p.createCollisionShape(**PROGRAMMATIC_OBJECT_SPECS["collision"])
+    visualid = p.createVisualShape(**PROGRAMMATIC_OBJECT_SPECS["visual"], 
+        rgbaColor=CYLINDER_COLORS[object_name])
     body = p.createMultiBody(0.05, collisionid, visualid)
     p.resetBasePositionAndOrientation(body, object_position, object_quat)
+    p.changeDynamics(body, -1, lateralFriction=1.0)
     return body
 
 
@@ -386,17 +387,25 @@ BULLET_OBJECT_SPECS = dict(
 )
 
 PROGRAMMATIC_OBJECT_SPECS = dict(
-    blue_cylinder=dict(
-        visual=dict(
-            shapeType=p.GEOM_CYLINDER,
-            rgbaColor=[0, 0, 1, 1],
-            length=0.05,
-            radius=0.03,
-        ),
-        collision=dict(
-            shapeType=p.GEOM_CYLINDER,
-            height=0.05,
-            radius=0.03,
-        )
+    visual=dict(
+        shapeType=p.GEOM_CYLINDER,
+        length=0.05,
+        radius=0.03,
+    ),
+    collision=dict(
+        shapeType=p.GEOM_CYLINDER,
+        height=0.05,
+        radius=0.03,
     )
+)
+
+CYLINDER_COLORS = dict(
+    red_cylinder=(1, 0, 0, 1),
+    blue_cylinder=(0, 0, 1, 1),
+    green_cylinder=(0, 1, 0, 1),
+    yellow_cylinder=(1, 1, 0, 1),
+    cyan_cylinder=(0, 1, 1, 1),
+    magenta_cylinder=(1, 0, 1, 1),
+    gray_cylinder=(0.5, 0.5, 0.5, 1),
+    maroon_cylinder=(0.5, 0, 0, 1),
 )

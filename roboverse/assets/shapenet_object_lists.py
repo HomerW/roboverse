@@ -1,3 +1,6 @@
+from roboverse.bullet.object_utils import CYLINDER_COLORS
+
+
 TRAIN_CONTAINERS = [
     'plate',
     'cube_concave',
@@ -283,6 +286,8 @@ PICK_PLACE_TRAIN_OBJECTS = [
     'jar',
     'aero_cylinder',
 ]
+
+PUSH_TRAIN_OBJECTS = list(CYLINDER_COLORS.keys())
 
 OBJECT_SCALINGS = {
     'conic_cup': 0.6,

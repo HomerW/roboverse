@@ -31,8 +31,8 @@ class MultiObjectEnv:
         self.object_scales = dict()
         self.object_orientations = dict()
         for object_name in self.object_names:
-            self.object_orientations[object_name] = OBJECT_ORIENTATIONS[object_name]
-            self.object_scales[object_name] = OBJECT_SCALINGS[object_name]
+            self.object_orientations[object_name] = OBJECT_ORIENTATIONS.get(object_name, (0, 0, 1, 0))
+            self.object_scales[object_name] = OBJECT_SCALINGS.get(object_name, 1.0)
         return super().reset(**kwargs)
 
 

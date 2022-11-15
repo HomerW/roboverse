@@ -1,7 +1,7 @@
 import gym
 from roboverse.assets.shapenet_object_lists \
     import GRASP_TRAIN_OBJECTS, GRASP_TEST_OBJECTS, OBJECT_SCALINGS, PICK_PLACE_TRAIN_OBJECTS, \
-    PICK_PLACE_TEST_OBJECTS, TRAIN_CONTAINERS, TEST_CONTAINERS
+    PICK_PLACE_TEST_OBJECTS, PUSH_TRAIN_OBJECTS, TRAIN_CONTAINERS, TEST_CONTAINERS
 
 ENVIRONMENT_SPECS = (
     {
@@ -156,21 +156,17 @@ ENVIRONMENT_SPECS = (
             'reward_type': 'pick_place',
             'control_mode': 'discrete_gripper',
             'observation_img_dim': 128,
-            # 'object_names': ('shed', 'fountain_vase'),
-            'object_names': ('blue_cylinder',),
-            # 'object_scales': [OBJECT_SCALINGS['shed'], OBJECT_SCALINGS['fountain_vase']],
-            'object_scales': [1.],
-            # 'target_object': 'shed',
-            'target_object': 'blue_cylinder',
+            'object_names': ('shed', 'fountain_vase'),
+            'object_scales': [OBJECT_SCALINGS['shed'], OBJECT_SCALINGS['fountain_vase']],
+            'target_object': 'shed',
             'load_tray': True,
             'object_position_high': (.72, 0.33, -.3),
             'object_position_low': (.48, 0.17, -.3),
             'container_position_low': (.72, 0.33, -.3),
             'container_position_high': (.48, 0.17, -.3),
             'transpose_image': False,
-            # 'camera_yaw': 20,
             'camera_distance': 0.37,
-            'show_place_target': True
+            # 'show_place_target': True
         }
     },
     {
@@ -188,11 +184,27 @@ ENVIRONMENT_SPECS = (
             'container_position_low': (.72, 0.33, -.3),
             'container_position_high': (.48, 0.17, -.3),
             'transpose_image': False,
-            # 'camera_yaw': 20,
-            # 'camera_target_pos': (0.6, 0.2, -0.2),
-            # 'camera_pitch': -50
             'camera_distance': 0.37,
-            'show_place_target': True
+            # 'show_place_target': True
+        }
+    },
+    {
+        'id': 'Widow250PickPlacePushPositionMultiObject-v0',
+        'entry_point': 'roboverse.envs.widow250_pickplace:Widow250PickPlacePositionMultiObjectEnv',
+        'kwargs': {
+            'reward_type': 'pick_place',
+            'control_mode': 'discrete_gripper',
+            'observation_img_dim': 48,
+            'possible_objects': PICK_PLACE_TRAIN_OBJECTS[:8] + PUSH_TRAIN_OBJECTS[:8],
+            'num_objects': 3,
+            'load_tray': True,
+            'object_position_high': (.7, 0.31, -.3),
+            'object_position_low': (.5, 0.19, -.3),
+            'container_position_low': (.7, 0.31, -.3),
+            'container_position_high': (.5, 0.19, -.3),
+            'transpose_image': False,
+            'camera_distance': 0.37,
+            # 'show_place_target': True
         }
     },
     {

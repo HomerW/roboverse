@@ -13,7 +13,9 @@ KEY_TO_ACTION_MAPPING = {
     ord('j'): np.array([0, 0, 0.2, 0, 0, 0, 0]),
     ord('k'): np.array([0, 0, -0.2, 0, 0, 0, 0]),
     ord('h'): np.array([0, 0, 0, 0, 0, 0, -0.7]),
-    ord('l'): np.array([0, 0, 0, 0, 0, 0, 0.7])
+    ord('l'): np.array([0, 0, 0, 0, 0, 0, 0.7]),
+    ord('q'): np.array([0, 0, 0, 0, 0, -10, 0]),
+    ord('e'): np.array([0, 0, 0, 0, 0, 10, 0])
 }
 
 ENV_COMMANDS = {
