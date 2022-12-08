@@ -57,3 +57,23 @@ def widow250():
                              baseOrientation=bullet.deg_to_quat([0., 0., 0])
                              )
     return widow250_id
+
+
+def sawyer():
+    sawyer_path = os.path.join(ASSET_PATH,
+                                'sawyer_robot/sawyer_description/urdf/drawer_sawyer.urdf')
+    sawyer_id = p.loadURDF(sawyer_path, 
+                            basePosition=[0, 0, 0],
+                            baseOrientation=[0, 0, 0, 1],
+                            globalScaling=1
+                            )
+    return sawyer_id
+
+
+def wall():
+    p.setAdditionalSearchPath(pybullet_data.getDataPath())
+    BASE_ASSET_PATH = os.path.join(ASSET_PATH, 'bullet-objects')
+    wall_id = p.loadURDF(os.path.join(BASE_ASSET_PATH, 'wall/wall.urdf'),
+                         basePosition=[.68, 0, -.3],
+                         globalScaling=1)
+    return wall_id

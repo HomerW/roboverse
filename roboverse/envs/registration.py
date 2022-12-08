@@ -1113,6 +1113,16 @@ ENVIRONMENT_SPECS = (
                    'load_tray': False,
                    }
     },
+    {
+        'id': 'Sawyer-v0',
+        'entry_point': ('roboverse.envs.sawyer:SawyerEnv'),
+        'kwargs': {}
+    },
+    {
+        'id': 'SawyerDrawerPickPlacePush-v0',
+        'entry_point': ('roboverse.envs.sawyer_drawerpickplacepush:SawyerDrawerPickPlacePushEnv'),
+        'kwargs': {}
+    },
 )
 
 

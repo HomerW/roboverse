@@ -25,18 +25,26 @@ def get_drawer_handle_link(drawer):
     handle_link_idx = link_names.index('handle_r')
     return handle_link_idx
 
+def get_drawer_frame_link(drawer):
+    link_names = [bullet.get_joint_info(drawer, j, 'linkName')
+                  for j in range(bullet.p.getNumJoints(drawer))]
+    frame_link_idx = link_names.index('frame')
+    return frame_link_idx
 
 def get_drawer_pos(drawer):
     drawer_pos, _ = bullet.get_link_state(
         drawer, get_drawer_base_joint(drawer))
     return np.array(drawer_pos)
 
-
 def get_drawer_handle_pos(drawer):
     handle_pos, _ = bullet.get_link_state(
         drawer, get_drawer_handle_link(drawer))
     return np.array(handle_pos)
 
+def get_drawer_frame_pos(drawer):
+    frame_pos, _ = bullet.get_link_state(
+        drawer, get_drawer_frame_link(drawer))
+    return np.array(frame_pos)
 
 def get_drawer_opened_percentage(
         left_opening, min_x_pos, max_x_pos, drawer_x_pos):

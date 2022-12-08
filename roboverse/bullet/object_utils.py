@@ -384,6 +384,35 @@ BULLET_OBJECT_SPECS = dict(
         baseOrientation=(0, 0, 0.707107, 0.707107),
         globalScaling=0.1,
     ),
+
+    multicolor_drawer=dict(
+        fileName=os.path.join(
+            BASE_ASSET_PATH, 'drawer/multicolor_drawer.urdf'),
+        basePosition=(.7, 0.2, -.35),
+        baseOrientation=(0, 0, 0.707107, 0.707107),
+        globalScaling=0.1,
+    ),
+    multicolor_tray=dict(
+        fileName=os.path.join(
+            BASE_ASSET_PATH, 'tray/multicolor_tray.urdf'),
+        basePosition=(.7, 0.2, -.35),
+        baseOrientation=(0, 0, 0.707107, 0.707107),
+        globalScaling=0.1,
+    ),
+    cylinder=dict(
+        fileName=os.path.join(
+            BASE_ASSET_PATH, 'cylinder/cylinder.urdf'),
+        basePosition=(.7, 0.2, -.35),
+        baseOrientation=(0, 0, 0.707107, 0.707107),
+        globalScaling=0.1,
+    ),
+    lego=dict(
+        fileName=os.path.join(
+            BASE_ASSET_PATH, 'lego/lego.urdf'),
+        basePosition=(.7, 0.2, -.35),
+        baseOrientation=(0, 0, 0.707107, 0.707107),
+        globalScaling=0.1,
+    ),
 )
 
 PROGRAMMATIC_OBJECT_SPECS = dict(
