@@ -188,11 +188,13 @@ class SawyerPickPlaceObjectUtil(SawyerObjectUtil):
         name = 'lego',
         z = -0.1,
         scale = 2.0,
+        target_z = -0.3,
         **kwargs,
     ):
         self.name = name
         self.z = z
         self.scale = scale
+        self.target_z = target_z
         super().__init__(**kwargs)
     
     def generate_obj_config(self):
@@ -222,7 +224,7 @@ class SawyerPickPlaceObjectUtil(SawyerObjectUtil):
             target_pos = np.array([
                 np.random.uniform(self.gripper_pos_low[0], self.gripper_pos_high[0]),
                 np.random.uniform(self.gripper_pos_low[1], self.gripper_pos_high[1]),
-                self.z
+                self.target_z
             ])
 
             valid = np.linalg.norm(pickplace_obj_pos[:2] - target_pos[:2]) > min_distance

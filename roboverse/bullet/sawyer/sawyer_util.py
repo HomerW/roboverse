@@ -107,16 +107,18 @@ class SawyerUtil():
         target_object_i = np.random.choice(3)
         if target_object_i == 0:
             target_object = 'drawer'
+            target_object_id = drawer_id
             target_position = drawer_target_position
         elif target_object_i == 1:
             target_object = 'push_obj'
+            target_object_id = push_obj_id
             target_position = push_obj_target_position
         else:
             target_object = 'pickplace_obj'
+            target_object_id = pickplace_obj_id
             target_position = pickplace_obj_target_position
         
-        return target_object, target_position
-
+        return target_object, target_object_id, target_position
 
     def _pos_in_gripper_workspace(self, pos):
         x_within_bounds = self.gripper_pos_low[0] <= pos[0] <= self.gripper_pos_high[0]
