@@ -2,9 +2,9 @@ from abc import abstractmethod
 import numpy as np
 import pybullet as p
 
-from roboverse.bullet.control import deg_to_quat, quat_to_deg	
+from roboverse.bullet.control import deg_to_quat, get_object_position	
 from roboverse.bullet import object_utils
-from roboverse.bullet.drawer_utils import open_drawer, close_drawer
+from roboverse.bullet.drawer_utils import open_drawer, close_drawer, get_drawer_handle_pos, get_drawer_frame_pos
 
 MAX_ATTEMPTS_TO_GENERATE_OBJECT_POSITIONS = 200
 
@@ -26,6 +26,10 @@ class SawyerObjectUtil():
         obj = object_utils.load_object(**config)
 
         return obj
+    
+    @abstractmethod
+    def generate_target(self):
+        pass
 
 class SawyerDrawerWithTrayObjectUtil(SawyerObjectUtil):
     def __init__(
@@ -103,7 +107,26 @@ class SawyerDrawerWithTrayObjectUtil(SawyerObjectUtil):
         tray = object_utils.load_object(**tray_config)
 
         return drawer, tray
+    
+    def generate_target(self, id):
+        if self._handle_more_open_than_closed(id):
+            drawer_target_coeff = self.drawer_close_coeff
+        else:
+            drawer_target_coeff = self.drawer_open_coeff
         
+        drawer_handle_target_pos = self._get_drawer_handle_future_pos(
+            get_drawer_frame_pos(drawer_target_coeff)
+        )
+        return drawer_handle_target_pos
+
+    def _handle_more_open_than_closed(self, id):
+        drawer_handle_close_pos = self._get_drawer_handle_future_pos(
+            self.drawer_close_coeff)
+        drawer_handle_open_pos = self._get_drawer_handle_future_pos(
+            self.drawer_open_coeff)
+        drawer_handle_pos = get_drawer_handle_pos(id)
+        return np.linalg.norm(drawer_handle_open_pos - drawer_handle_pos) < np.linalg.norm(drawer_handle_close_pos - drawer_handle_pos)
+
     def _get_drawer_handle_future_pos(self, drawer_frame_pos=None, drawer_yaw=None, coeff=0):
         return drawer_frame_pos + coeff * np.array([
             np.sin(drawer_yaw * np.pi / 180), 
@@ -147,6 +170,17 @@ class SawyerPushObjectUtil(SawyerObjectUtil):
             'scale': self.scale,
         }
         return config
+    
+    def generate_target(self, id):
+        push_obj_pos = get_object_position(id)[0]
+        quadrant = self._get_quadrant(push_obj_pos)
+        target_quadrant_i = np.random.choice([(quadrant - 1) % 4, (quadrant + 1) % 4])
+        target_pos = quadrant[target_quadrant_i]
+        return target_pos
+
+    def _get_quadrant(self, pos):
+        distance_to_quadrants = np.linalg.norm(np.array(self.quadrants) - pos[:2], axis=1)
+        return np.argmin(distance_to_quadrants)
 
 class SawyerPickPlaceObjectUtil(SawyerObjectUtil):
     def __init__(
@@ -177,3 +211,23 @@ class SawyerPickPlaceObjectUtil(SawyerObjectUtil):
             'scale': self.scale,
         }
         return config
+    
+    def generate_target(self, id, min_distance=0.1, bound_distance=0):
+        pickplace_obj_pos = get_object_position(id)[0]
+
+        valid = False
+        max_attempts = MAX_ATTEMPTS_TO_GENERATE_OBJECT_POSITIONS
+        i = 0
+        while not valid:
+            target_pos = np.array([
+                np.random.uniform(self.gripper_pos_low[0], self.gripper_pos_high[0]),
+                np.random.uniform(self.gripper_pos_low[1], self.gripper_pos_high[1]),
+                self.z
+            ])
+
+            valid = np.linalg.norm(pickplace_obj_pos[:2] - target_pos[:2]) > min_distance
+
+            if i > max_attempts:
+                raise ValueError('Min distance could not be assured')
+        
+        return target_pos
