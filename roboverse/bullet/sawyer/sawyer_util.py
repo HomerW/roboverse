@@ -81,14 +81,12 @@ class SawyerUtil():
                 np.linalg.norm(
                     get_drawer_pos(drawer_id) - get_object_position(pickplace_obj_id)[0]
                 ) > min_distances['drawer_pnp']
-            
-            if valid:
-                valid, target_object, target_position = self.generate_target(self.objects)
 
             if i > MAX_ATTEMPTS_TO_GENERATE_OBJECT_POSITIONS:
                 raise ValueError('Could not spawn objects')
             i += 1
-
+        
+        target_object, target_position = self.generate_target(self.objects)
         objects = {
             'drawer': drawer_id,
             'tray': tray_id,
@@ -106,31 +104,18 @@ class SawyerUtil():
         push_obj_target_position = self.push_obj_util.generate_target(push_obj_id)
         pickplace_obj_target_position = self.pickplace_obj_util.generate_target(pickplace_obj_id)
 
-        mask = [
-            drawer_target_position is not None,
-            push_obj_target_position is not None,
-            pickplace_obj_target_position is not None,
-        ]
-        if sum(mask) == 0:
-            valid = False
-            target_object = None
-            target_position = None
+        target_object_i = np.random.choice(3)
+        if target_object_i == 0:
+            target_object = 'drawer'
+            target_position = drawer_target_position
+        elif target_object_i == 1:
+            target_object = 'push_obj'
+            target_position = push_obj_target_position
         else:
-            valid = True
-
-            prob_dist = [v / sum(mask) for v in mask]
-            target_object_i = np.random.choice(3, p=prob_dist)
-            if target_object_i == 0:
-                target_object = 'drawer'
-                target_position = drawer_target_position
-            elif target_object_i == 1:
-                target_object = 'push_obj'
-                target_position = push_obj_target_position
-            else:
-                target_object = 'pickplace_obj'
-                target_position = pickplace_obj_target_position
+            target_object = 'pickplace_obj'
+            target_position = pickplace_obj_target_position
         
-        return valid, target_object, target_position
+        return target_object, target_position
 
 
     def _pos_in_gripper_workspace(self, pos):
