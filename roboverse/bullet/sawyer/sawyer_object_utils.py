@@ -68,7 +68,7 @@ class SawyerDrawerWithTrayObjectUtil(SawyerObjectUtil):
             self.z,
         ])
 
-        if drawer_quadrant == 0:
+        if drawer_quadrant_i == 0:
             drawer_yaw = np.random.uniform(0, 90)
         else:
             drawer_yaw = np.random.uniform(90, 180)

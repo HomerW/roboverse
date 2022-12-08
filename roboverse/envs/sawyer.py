@@ -81,6 +81,7 @@ class SawyerEnv(gym.Env, Serializable):
             self.robot_id, 'link_name', 'gripper_site')
 
     def _reset_gripper(self):
+        ## Move to position
         init_pos = np.array(self._pos_init)
         init_theta = np.array(self._quat_init)
 
@@ -88,6 +89,11 @@ class SawyerEnv(gym.Env, Serializable):
                             self.end_effector_id,
                             init_pos,
                             init_theta)
+
+        ## Open gripper
+        action = np.array([0, 0, 1, 0, -1])
+        for _ in range(10):
+            self.step(action)
 
     def _format_state_query(self):
         ## position and orientation of body root

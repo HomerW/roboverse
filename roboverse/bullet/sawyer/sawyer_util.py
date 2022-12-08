@@ -27,7 +27,14 @@ class SawyerUtil():
         self.push_obj_util = SawyerPushObjectUtil(**util_kwargs)
         self.pickplace_obj_util = SawyerPickPlaceObjectUtil(**util_kwargs)
 
-    def generate_object_positions(self, min_distance=0.15):
+    def generate_object_positions(
+        self, 
+        min_distances={
+            'drawer_push': 0.2,
+            'pnp_push': 0.1,
+            'drawer_pnp': 0.15,
+        }
+    ):
         i = 0
         valid = False
         while not valid:
@@ -53,16 +60,28 @@ class SawyerUtil():
             ]:
                 valid = valid and self._pos_in_gripper_workspace(pos)
 
-            # Check collision between cylinder and drawer
+            # Check collision between push object and drawer
             valid = valid and \
                 np.linalg.norm(
                     get_drawer_pos(drawer_id) - get_object_position(push_obj_id)[0]
-                ) > min_distance
+                ) > min_distances['drawer_push']
             valid = valid and \
                 np.linalg.norm(
                     get_drawer_frame_pos(drawer_id) - get_object_position(push_obj_id)[0]
-                ) > min_distance
+                ) > min_distances['drawer_push']
             
+            # Check collision between pnp object and push object
+            valid = valid and \
+                np.linalg.norm(
+                    get_object_position(push_obj_id)[0] - get_object_position(pickplace_obj_id)[0]
+                ) > min_distances['pnp_push']
+            
+            # Check collision between pnp object and drawer
+            valid = valid and \
+                np.linalg.norm(
+                    get_drawer_pos(drawer_id) - get_object_position(pickplace_obj_id)[0]
+                ) > min_distances['drawer_pnp']
+
             if i > MAX_ATTEMPTS_TO_GENERATE_OBJECT_POSITIONS:
                 raise ValueError('Could not spawn objects')
             i += 1
