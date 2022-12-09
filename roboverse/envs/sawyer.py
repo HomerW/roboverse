@@ -29,8 +29,8 @@ class SawyerEnv(gym.Env, Serializable):
                  quat_init = bullet.deg_to_quat([180, 0, 0]),
                  max_force=100.,
 
-                 env_obs_img_dim=196,
-                 obs_img_dim=48,
+                 env_observation_img_dim=196,
+                 observation_img_dim=48,
                  downsample=True,
                  transpose_image=False,
 
@@ -58,13 +58,13 @@ class SawyerEnv(gym.Env, Serializable):
         self._uid = bullet.connect_headless(self.gui)
 
         self._transpose_image = transpose_image
-        self.env_obs_img_dim = env_obs_img_dim
-        self.obs_img_dim = obs_img_dim
+        self.env_observation_img_dim = env_observation_img_dim
+        self.observation_img_dim = observation_img_dim
         self._downsample = downsample
-        self.image_shape = (obs_img_dim, obs_img_dim)
+        self.image_shape = (observation_img_dim, observation_img_dim)
         self.image_length = np.prod(self.image_shape) * 3
         self._projection_matrix_obs = bullet.get_projection_matrix(
-            self.obs_img_dim, self.obs_img_dim)
+            self.observation_img_dim, self.observation_img_dim)
 
         self._view_matrix_obs = bullet.get_view_matrix(
             target_pos=[0.7, 0, -0.25], distance=0.5,
@@ -169,10 +169,10 @@ class SawyerEnv(gym.Env, Serializable):
 
         return observation, reward, done, info
 
-    def _get_end_effector_pos(self):
+    def get_end_effector_pos(self):
         return get_link_state(self.robot_id, self.end_effector_id, 'pos')
 
-    def _get_end_effector_theta(self):
+    def get_end_effector_theta(self):
         return get_link_state(self.robot_id, self.end_effector_id, 'theta')
 
     def get_observation(self):
@@ -187,7 +187,7 @@ class SawyerEnv(gym.Env, Serializable):
             left_tip_pos - right_tip_pos)]
         hand_theta = get_link_state(self.robot_id, self.end_effector_id,
                                            'theta', quat_to_deg=False)
-        end_effector_pos = self._get_end_effector_pos()
+        end_effector_pos = self.get_end_effector_pos()
         gripper_state = np.concatenate((
             end_effector_pos, hand_theta, gripper_tips_distance,
         ))
@@ -211,7 +211,7 @@ class SawyerEnv(gym.Env, Serializable):
 
     def render_obs(self):
         img, depth, segmentation = bullet.render(
-            self.env_obs_img_dim, self.env_obs_img_dim, self._view_matrix_obs,
+            self.env_observation_img_dim, self.env_observation_img_dim, self._view_matrix_obs,
             self._projection_matrix_obs, shadow=0)
 
         if self._downsample:

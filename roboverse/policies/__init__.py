@@ -11,6 +11,7 @@ from .drawer_close_open_transfer import (
     DrawerCloseOpenTransfer,
     DrawerCloseOpenTransferSuboptimal
 )
+from .sawyer_policies import SawyerDrawerPickPlacePush
 
 policies = dict(
     grasp=Grasp,
@@ -24,7 +25,8 @@ policies = dict(
     place=Place,
     drawer_close_open_transfer=DrawerCloseOpenTransfer,
     push=Push,
-    pickplacepush=PickPlacePush
+    pickplacepush=PickPlacePush,
+    sawyer_drawerpickplacepush=SawyerDrawerPickPlacePush,
 )
 
 suboptimal_polices = dict(

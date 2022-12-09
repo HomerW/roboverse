@@ -80,8 +80,8 @@ def collect_one_traj(env, policy, num_timesteps, noise, accept_trajectory_key):
             num_steps = j
 
         rewards.append(reward)
-        if done or agent_info["done"]:
-            break
+        # if done or agent_info["done"]:
+        #     break
 
     if info[accept_trajectory_key]:
         success = True

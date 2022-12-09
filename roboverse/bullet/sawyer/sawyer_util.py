@@ -71,45 +71,51 @@ class SawyerUtil():
                 ) > min_distances['drawer_push']
             
             # Check collision between pnp object and push object
-            valid = valid and \
-                np.linalg.norm(
-                    get_object_position(push_obj_id)[0] - get_object_position(pickplace_obj_id)[0]
-                ) > min_distances['pnp_push']
+            # valid = valid and \
+            #     np.linalg.norm(
+            #         get_object_position(push_obj_id)[0] - get_object_position(pickplace_obj_id)[0]
+            #     ) > min_distances['pnp_push']
             
-            # Check collision between pnp object and drawer
-            valid = valid and \
-                np.linalg.norm(
-                    get_drawer_pos(drawer_id) - get_object_position(pickplace_obj_id)[0]
-                ) > min_distances['drawer_pnp']
+            # Check collision between pnp object and drawer handle
+            # valid = valid and \
+            #     np.linalg.norm(
+            #         get_drawer_handle_pos(drawer_id) - get_object_position(pickplace_obj_id)[0]
+            #     ) > min_distances['drawer_pnp']
 
             if i > MAX_ATTEMPTS_TO_GENERATE_OBJECT_POSITIONS:
                 raise ValueError('Could not spawn objects')
             i += 1
         
-        target_object, target_position = self.generate_target(self.objects)
         objects = {
             'drawer': drawer_id,
             'tray': tray_id,
             'push_obj': push_obj_id,
             'pickplace_obj': pickplace_obj_id
         }
-        return objects, target_object, target_position
+        object_positions = {
+            'drawer': get_drawer_handle_pos(drawer_id),
+            'push_obj': get_object_position(push_obj_id)[0],
+            'pickplace_obj': get_object_position(pickplace_obj_id)[0],
+        }
+        target_object, target_object_id, target_position = self.generate_target(objects)
+
+        return objects, object_positions, target_object, target_object_id, target_position
     
     def generate_target(self, objects):
         drawer_id = objects['drawer']
         push_obj_id = objects['push_obj']
-        pickplace_obj_id = objects['pickplace']
+        pickplace_obj_id = objects['pickplace_obj']
 
         drawer_target_position = self.drawer_util.generate_target(drawer_id)
         push_obj_target_position = self.push_obj_util.generate_target(push_obj_id)
         pickplace_obj_target_position = self.pickplace_obj_util.generate_target(pickplace_obj_id)
 
-        target_object_i = np.random.choice(3)
-        if target_object_i == 0:
+        target_object_i = np.random.choice(4)
+        if target_object_i in [0, 1]:
             target_object = 'drawer'
             target_object_id = drawer_id
             target_position = drawer_target_position
-        elif target_object_i == 1:
+        elif target_object_i == 2:
             target_object = 'push_obj'
             target_object_id = push_obj_id
             target_position = push_obj_target_position

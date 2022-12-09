@@ -1,8 +1,7 @@
 import numpy as np
 
 import roboverse.bullet as bullet
-from roboverse.bullet.drawer_utils import get_drawer_handle_pos
-from roboverse.bullet.sawyer.sawyer_queries import get_link_state
+from roboverse.bullet.drawer_utils import get_drawer_handle_pos, get_drawer_frame_yaw
 
 class SawyerDrawerPickPlacePush:
 
@@ -24,11 +23,11 @@ class SawyerDrawerPickPlacePush:
     
     def get_action(self):
         if self.env.target_object == 'drawer':
-            self.drawer_policy.get_action()
+            return self.drawer_policy.get_action()
         elif self.env.target_object == 'push_obj':
-            self.push_policy.get_action()
+            return self.push_policy.get_action()
         elif self.env.target_object == 'pickplace_obj':
-            self.pick_place_policy.get_action()
+            return self.pick_place_policy.get_action()
         else:
             raise ValueError("Target object doesn't exist")
 
@@ -39,40 +38,44 @@ class SawyerDrawer:
     
     def reset(self):
         self.target_pos = self.env.target_position
-        self.drawer_yaw = get_link_state(
-            self.env.robot_id, 
-            self.env.target_object_id, 
-            'theta'
-        )[2]
+        self.target_ee_pos_early = None
+        self.target_ee_yaw = None
+        self.drawer_yaw = get_drawer_frame_yaw(self.env.target_object_id)
         self.grip = -1.
         self.gripper_at_push_point = False
         self.gripper_has_been_above = False
     
     def get_action(self):
-        ee_pos = self.env._get_end_effector_pos()
-        ee_yaw = self.env._get_end_effector_theta()[2]
+        ee_pos = self.env.get_end_effector_pos()
+        ee_yaw = self.env.get_end_effector_theta()[2]
 
         drawer_handle_pos = get_drawer_handle_pos(self.env.target_object_id)
-        target_ee_pos_early = drawer_handle_pos - 0.0125 * \
-            np.array([np.sin((self.drawer_yaw+180) * np.pi / 180), -
-                     np.cos((self.drawer_yaw+180) * np.pi / 180), 0])
+        if self.target_ee_pos_early is None:
+            random_shift = np.random.uniform(-0.05, 0.05)
+            self.target_ee_pos_early = drawer_handle_pos - 0.0125 * \
+                np.array([np.sin((self.drawer_yaw+180) * np.pi / 180), -
+                        np.cos((self.drawer_yaw+180) * np.pi / 180), 0]) - \
+                        random_shift * np.array([np.cos((self.drawer_yaw+180) * np.pi / 180),
+                        -np.sin((self.drawer_yaw+180) * np.pi / 180), 0])
         
-        if 0 <= self.drawer_yaw < 90:
-            target_ee_yaw = self.drawer_yaw
-        elif 90 <= self.drawer_yaw < 270:
-            target_ee_yaw = self.drawer_yaw - 180
-        else:
-            target_ee_yaw = self.drawer_yaw - 360
+        if self.target_ee_yaw is None:
+            if 0 <= self.drawer_yaw < 90:
+                self.target_ee_yaw = self.drawer_yaw
+            elif 90 <= self.drawer_yaw < 270:
+                self.target_ee_yaw = self.drawer_yaw - 180
+            else:
+                self.target_ee_yaw = self.drawer_yaw - 360
+            self.target_ee_yaw += np.random.uniform(-45, 45)
 
-        gripper_yaw_aligned = np.linalg.norm(target_ee_yaw - ee_yaw) > 5
+        gripper_yaw_aligned = np.linalg.norm(self.target_ee_yaw - ee_yaw) > 5
         gripper_pos_xy_aligned = np.linalg.norm(
-            target_ee_pos_early[:2] - ee_pos[:2]) < .01
+            self.target_ee_pos_early[:2] - ee_pos[:2]) < .01
         gripper_pos_z_aligned = np.linalg.norm(
-            target_ee_pos_early[2] - ee_pos[2]) < .0175
+            self.target_ee_pos_early[2] - ee_pos[2]) < .0175
         gripper_above = ee_pos[2] >= -0.105
         if not self.gripper_has_been_above and gripper_above:
             self.gripper_has_been_above = True
-        done = np.linalg.norm(self.target_pos - drawer_handle_pos) < 0.01
+        done = np.linalg.norm(self.target_pos - drawer_handle_pos) < 0.015
 
         # Stage 1: if gripper is too low, raise it
         if not self.gripper_at_push_point and not self.gripper_has_been_above:
@@ -82,24 +85,24 @@ class SawyerDrawer:
             # Stage 2: align gripper yaw
             action = np.zeros((4,))
             if gripper_yaw_aligned:
-                if target_ee_yaw > ee_yaw:
+                if self.target_ee_yaw > ee_yaw:
                     action[3] = 1
                 else:
                     action[3] = -1
             # Stage 3: align gripper position with handle position
             if not gripper_pos_xy_aligned:
-                xy_action = (target_ee_pos_early - ee_pos) * 6 * 2
+                xy_action = (self.target_ee_pos_early - ee_pos) * 6 * 2
                 action[0] = xy_action[0]
                 action[1] = xy_action[1]
         # Stage 4: lower gripper around handle
         elif not self.gripper_at_push_point and (gripper_pos_xy_aligned and not gripper_pos_z_aligned):
-            xy_action = (target_ee_pos_early - ee_pos) * 6 * 2
+            xy_action = (self.target_ee_pos_early - ee_pos) * 6 * 2
             action = np.array([xy_action[0], xy_action[1], xy_action[2]*3, 0])
         # Stage 5: open/close drawer
         else:
             if not self.gripper_at_push_point:
                 self.gripper_at_push_point = True
-            xy_action = self.td_goal - drawer_handle_pos
+            xy_action = self.target_pos - drawer_handle_pos
             action = 12*np.array([xy_action[0], xy_action[1], 0, 0])
 
         if done:
@@ -107,7 +110,8 @@ class SawyerDrawer:
 
         action = np.append(action, [self.grip])
         action = np.clip(action, a_min=-1, a_max=1)
-        return action
+        agent_info = dict(done=done)
+        return action, agent_info
 
 class SawyerPush:
 
@@ -116,6 +120,8 @@ class SawyerPush:
     
     def reset(self):
         self.target_pos = self.env.target_position
+        self.target_ee_pos_early = None
+        self.target_ee_yaw = None
         self.grip = -1.
         self.gripper_at_push_point = False
         self.gripper_has_been_above = False
@@ -124,25 +130,34 @@ class SawyerPush:
         object_pos, _ = bullet.get_object_position(
             self.env.target_object_id
         )
-        ee_pos = self.env._get_end_effector_pos()
-        ee_yaw = self.env._get_end_effector_theta()[2]
+        ee_pos = self.env.get_end_effector_pos()
+        ee_yaw = self.env.get_end_effector_theta()[2]
 
-        vec = self.target_pos[:2] - object_pos[:2]
-        direction = (np.arctan2(vec[1], vec[0]) * 180 / np.pi + 360 + 90) % 360
-        target_ee_yaw_opts = [direction + 90, direction - 90,
-                            direction + 270, direction - 270, direction + 420]
-        target_ee_yaw = min(target_ee_yaw_opts,
-                          key=lambda x: np.linalg.norm(x - ee_yaw))
+        if self.target_ee_yaw is None:
+            vec = self.target_pos[:2] - object_pos[:2]
+            direction = (np.arctan2(vec[1], vec[0]) * 180 / np.pi + 360 + 90) % 360
+            target_ee_yaw_opts = [direction + 90, direction - 90,
+                                direction + 270, direction - 270, direction + 420]
+            self.target_ee_yaw = min(target_ee_yaw_opts,
+                            key=lambda x: np.linalg.norm(x - ee_yaw))
+            self.target_ee_yaw += np.random.uniform(-45, 45)
         
-        target_ee_pos_early = object_pos - 0.11 * \
-            np.array([np.sin(direction * np.pi / 180), -
-                     np.cos(direction * np.pi / 180), 0])
+        if self.target_ee_pos_early is None:
+            random_shift = np.random.uniform(-0.025, 0.025)
+            self.target_ee_pos_early = object_pos - 0.11 * \
+                np.array([np.sin(direction * np.pi / 180), -
+                np.cos(direction * np.pi / 180), 0]) + random_shift * \
+                np.array([np.cos(direction * np.pi / 180),
+                -np.sin(direction * np.pi / 180), 0])
+            object_pos = object_pos + random_shift * \
+                np.array([np.cos(direction * np.pi / 180),
+                -np.sin(direction * np.pi / 180), 0])
 
-        gripper_yaw_aligned = np.linalg.norm(target_ee_yaw - ee_yaw) > 5
+        gripper_yaw_aligned = np.linalg.norm(self.target_ee_yaw - ee_yaw) > 5
         gripper_pos_xy_aligned = np.linalg.norm(
-            target_ee_pos_early[:2] - ee_pos[:2]) < .005
+            self.target_ee_pos_early[:2] - ee_pos[:2]) < .1
         gripper_pos_z_aligned = np.linalg.norm(
-            target_ee_pos_early[2] - ee_pos[2]) < .0375
+            self.target_ee_pos_early[2] - ee_pos[2]) < np.random.uniform(.05, 0.1)
         gripper_above = ee_pos[2] >= -0.105
         if not self.gripper_has_been_above and gripper_above:
             self.gripper_has_been_above = True
@@ -154,7 +169,7 @@ class SawyerPush:
         if not self.gripper_has_been_above:
             action = np.array([0, 0, 1, 0])
 
-            if target_ee_yaw > ee_yaw:
+            if self.target_ee_yaw > ee_yaw:
                 action[3] = 1
             else:
                 action[3] = -1
@@ -162,24 +177,24 @@ class SawyerPush:
             # Stage 2: align gripper yaw
             action = np.zeros((4,))
             if gripper_yaw_aligned:  
-                if target_ee_yaw > ee_yaw:
+                if self.target_ee_yaw > ee_yaw:
                     action[3] = 1
                 else:
                     action[3] = -1
             # Stage 3: align gripper position with handle position
             if not self.gripper_at_push_point and not gripper_pos_xy_aligned: 
-                xy_action = (target_ee_pos_early - ee_pos) * 6 * 2
+                xy_action = (self.target_ee_pos_early - ee_pos) * 6 * 2
                 action[0] = xy_action[0]
                 action[1] = xy_action[1]
         # Stage 4: lower gripper around handle
         elif gripper_pos_xy_aligned and not gripper_pos_z_aligned: 
-            xy_action = (target_ee_pos_early - ee_pos) * 6 * 2
+            xy_action = (self.target_ee_pos_early - ee_pos) * 6 * 2
             action = np.array([xy_action[0], xy_action[1], xy_action[2]*3, 0])
         # Stage 5: open/close drawer
         else:
             if not self.gripper_at_push_point:
                 self.gripper_at_push_point = True
-            xy_action = self.target_pos - object_pos
+            xy_action = self.target_pos[:2] - object_pos[:2]
             xy_action *= 6
             action = np.array([xy_action[0], xy_action[1], 0, 0])
 
@@ -188,7 +203,8 @@ class SawyerPush:
 
         action = np.append(action, [self.grip])
         action = np.clip(action, a_min=-1, a_max=1)
-        return action
+        agent_info = dict(done=done)
+        return action, agent_info
 
 
 class SawyerPickPlace:
@@ -198,6 +214,7 @@ class SawyerPickPlace:
     
     def reset(self):
         self.drop_point = self.env.target_position
+        self.target_ee_yaw = None
         self.grip = -1.
         self.object_lifted = False
         self.place_attempted = False
@@ -206,28 +223,29 @@ class SawyerPickPlace:
         object_pos, _ = bullet.get_object_position(
             self.env.target_object_id
         )
-        target_ee_yaw = np.random.uniform(0, 360)
-        ee_pos = self.env._get_end_effector_pos()
-        ee_yaw = self.env._get_end_effector_theta()[2]
+        ee_pos = self.env.get_end_effector_pos()
+        ee_yaw = self.env.get_end_effector_theta()[2]
+        if self.target_ee_yaw is None:
+            self.target_ee_yaw = ee_yaw + np.random.uniform(-180, 180)
         
         aligned = np.linalg.norm(object_pos[:2] - ee_pos[:2]) < 0.035
-        enclosed = np.linalg.norm(object_pos[2] - ee_pos[2]) < 0.05
+        enclosed = np.linalg.norm(object_pos[2] - ee_pos[2]) < 0.025
         done = np.linalg.norm(object_pos[:2] - self.drop_point[:2]) < 0.025
         above = ee_pos[2] >= -0.125
-        ee_yaw_aligned = np.linalg.norm(target_ee_yaw - ee_yaw) > 10
+        ee_yaw_aligned = np.linalg.norm(self.target_ee_yaw - ee_yaw) > 10
 
         if not aligned and not above:
             action = np.array([0., 0., 1., 0.])
             self.grip = -1.
 
-            if target_ee_yaw > ee_yaw:
+            if self.target_ee_yaw > ee_yaw:
                 action[3] = 1
             else:
                 action[3] = -1
         elif (not self.object_lifted and ee_yaw_aligned) or not aligned:
             action = np.zeros((4,))
             if not self.object_lifted and ee_yaw_aligned:
-                if target_ee_yaw > ee_yaw:
+                if self.target_ee_yaw > ee_yaw:
                     action[3] = 1
                 else:
                     action[3] = -1
@@ -251,7 +269,7 @@ class SawyerPickPlace:
             action[2] -= 0.03
             action *= 3.0
             action[2] *= 2.0
-            self.grip += 0.5
+            self.grip = 1.
         elif not self.place_attempted and not above:
             action = np.array([0., 0., 1., 0.])
             self.grip = 1.
@@ -263,10 +281,12 @@ class SawyerPickPlace:
             action[2] = 0
             action *= 3.0
             self.grip = 1.
-        else:
-            action = np.array([0., 0., 0., 0.])
+        
+        if done:
+            action = np.array([0., 0., 1., 0.])
             self.grip = -1
         
         action = np.append(action, [self.grip])
         action = np.clip(action, a_min=-1, a_max=1)
-        return action
+        agent_info = dict(done=done)
+        return action, agent_info

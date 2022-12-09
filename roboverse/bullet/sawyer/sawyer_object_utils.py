@@ -4,7 +4,7 @@ import pybullet as p
 
 from roboverse.bullet.control import deg_to_quat, get_object_position	
 from roboverse.bullet import object_utils
-from roboverse.bullet.drawer_utils import open_drawer, close_drawer, get_drawer_handle_pos, get_drawer_frame_pos
+from roboverse.bullet.drawer_utils import open_drawer, close_drawer, get_drawer_handle_pos, get_drawer_frame_pos, get_drawer_frame_yaw
 
 MAX_ATTEMPTS_TO_GENERATE_OBJECT_POSITIONS = 200
 
@@ -115,15 +115,19 @@ class SawyerDrawerWithTrayObjectUtil(SawyerObjectUtil):
             drawer_target_coeff = self.drawer_open_coeff
         
         drawer_handle_target_pos = self._get_drawer_handle_future_pos(
-            get_drawer_frame_pos(drawer_target_coeff)
+            get_drawer_frame_pos(id), get_drawer_frame_yaw(id),
+            coeff=drawer_target_coeff
         )
         return drawer_handle_target_pos
 
     def _handle_more_open_than_closed(self, id):
+        drawer_frame_pos = get_drawer_frame_pos(id)
+        drawer_frame_yaw = get_drawer_frame_yaw(id)
+
         drawer_handle_close_pos = self._get_drawer_handle_future_pos(
-            self.drawer_close_coeff)
+            drawer_frame_pos, drawer_frame_yaw, self.drawer_close_coeff)
         drawer_handle_open_pos = self._get_drawer_handle_future_pos(
-            self.drawer_open_coeff)
+            drawer_frame_pos, drawer_frame_yaw, self.drawer_open_coeff)
         drawer_handle_pos = get_drawer_handle_pos(id)
         return np.linalg.norm(drawer_handle_open_pos - drawer_handle_pos) < np.linalg.norm(drawer_handle_close_pos - drawer_handle_pos)
 
@@ -139,10 +143,10 @@ class SawyerPushObjectUtil(SawyerObjectUtil):
         self,
         name='cylinder',
         quadrants = [
-            [0.61, 0.09],
-            [0.61, -0.09],
-            [0.73, -0.09],
-            [0.73, 0.09]
+            [0.61 - .025, 0.09 + .025],
+            [0.61 - .025, -0.09 - .025],
+            [0.73 + .025, -0.09 - .025],
+            [0.73 + .025, 0.09 + .025]
         ],
         z = -.3525,
         scale = 1.4,
@@ -175,7 +179,7 @@ class SawyerPushObjectUtil(SawyerObjectUtil):
         push_obj_pos = get_object_position(id)[0]
         quadrant = self._get_quadrant(push_obj_pos)
         target_quadrant_i = np.random.choice([(quadrant - 1) % 4, (quadrant + 1) % 4])
-        target_pos = quadrant[target_quadrant_i]
+        target_pos = np.append(self.quadrants[target_quadrant_i], self.z)
         return target_pos
 
     def _get_quadrant(self, pos):
@@ -187,8 +191,8 @@ class SawyerPickPlaceObjectUtil(SawyerObjectUtil):
         self,
         name = 'lego',
         z = -0.1,
-        scale = 2.0,
-        target_z = -0.3,
+        scale = 1.25,
+        target_z = -0.36,
         **kwargs,
     ):
         self.name = name
