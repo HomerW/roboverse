@@ -92,11 +92,11 @@ class SawyerUtil():
             'push_obj': push_obj_id,
             'pickplace_obj': pickplace_obj_id
         }
-        object_positions = {
-            'drawer': get_drawer_handle_pos(drawer_id),
-            'push_obj': get_object_position(push_obj_id)[0],
-            'pickplace_obj': get_object_position(pickplace_obj_id)[0],
-        }
+        object_positions = [
+            get_drawer_handle_pos(drawer_id),
+            get_object_position(push_obj_id)[0],
+            get_object_position(pickplace_obj_id)[0],
+        ]
         target_object, target_object_id, target_position = self.generate_target(objects)
 
         return objects, object_positions, target_object, target_object_id, target_position
@@ -110,12 +110,12 @@ class SawyerUtil():
         push_obj_target_position = self.push_obj_util.generate_target(push_obj_id)
         pickplace_obj_target_position = self.pickplace_obj_util.generate_target(pickplace_obj_id)
 
-        target_object_i = np.random.choice(4)
-        if target_object_i in [0, 1]:
+        target_object_i = np.random.choice(3)
+        if target_object_i == 0:
             target_object = 'drawer'
             target_object_id = drawer_id
             target_position = drawer_target_position
-        elif target_object_i == 2:
+        elif target_object_i == 1:
             target_object = 'push_obj'
             target_object_id = push_obj_id
             target_position = push_obj_target_position

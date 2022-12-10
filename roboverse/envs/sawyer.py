@@ -29,7 +29,7 @@ class SawyerEnv(gym.Env, Serializable):
                  quat_init = bullet.deg_to_quat([180, 0, 0]),
                  max_force=100.,
 
-                 env_observation_img_dim=196,
+                 env_observation_img_dim=48,
                  observation_img_dim=48,
                  downsample=True,
                  transpose_image=False,
@@ -198,7 +198,7 @@ class SawyerEnv(gym.Env, Serializable):
         ## Observation
         observation = {
             'state': gripper_state,
-            'image': image_observation,
+            'image': np.float32(image_observation.flatten()) / 255.0,
         }
 
         return observation
