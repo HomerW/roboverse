@@ -149,6 +149,8 @@ def main(args):
     with h5py.File(path, "w") as f:
         f["observations/images0"] = np.array([o["image"] for t in data for o in t["observations"]])
         f["next_observations/images0"] = np.array([o["image"] for t in data for o in t["next_observations"]])
+        f["observations/state"] = np.array([o["state"] for t in data for o in t["observations"]])
+        f["next_observations/state"] = np.array([o["state"] for t in data for o in t["observations"]])
         f["actions"] = np.array([a for t in data for a in t["actions"]], dtype=np.float32)
         f["terminals"] = np.zeros(f["actions"].shape[0], dtype=np.bool_)
         f["truncates"] = np.zeros(f["actions"].shape[0], dtype=np.bool_)

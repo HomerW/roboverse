@@ -46,10 +46,13 @@ def get_drawer_frame_pos(drawer):
         drawer, get_drawer_frame_link(drawer))
     return np.array(frame_pos)
 
-def get_drawer_frame_yaw(drawer):
-    _, frame_quat = bullet.get_link_state(
+def get_drawer_frame_pos_quat(drawer):
+    frame_pos, frame_quat = bullet.get_link_state(
         drawer, get_drawer_frame_link(drawer))
-    yaw = control.quat_to_deg(frame_quat)[2]
+    return frame_pos, frame_quat
+
+def get_drawer_frame_yaw(drawer):
+    yaw = control.quat_to_deg(get_drawer_frame_pos_quat(drawer)[1])[2]
     return yaw
 
 def get_drawer_opened_percentage(

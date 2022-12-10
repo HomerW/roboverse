@@ -2,7 +2,7 @@ import numpy as np
 import pybullet as p
 
 from roboverse.bullet.sawyer.sawyer_object_utils import SawyerDrawerWithTrayObjectUtil, SawyerPickPlaceObjectUtil, SawyerPushObjectUtil
-from roboverse.bullet.drawer_utils import get_drawer_pos, get_drawer_frame_pos, get_drawer_handle_pos
+from roboverse.bullet.drawer_utils import get_drawer_pos, get_drawer_frame_pos, get_drawer_handle_pos, get_drawer_frame_pos_quat
 from roboverse.bullet.control import get_object_position, step_simulation
 import roboverse.bullet as bullet
 
@@ -29,62 +29,76 @@ class SawyerUtil():
 
     def generate_object_positions(
         self, 
+        drawer_state=None,
+        push_obj_state=None,
+        pickplace_obj_state=None,
+        target_object=None, 
+        target_position=None,
         min_distances={
             'drawer_push': 0.2,
             'pnp_push': 0.1,
             'drawer_pnp': 0.15,
         }
     ):
-        i = 0
-        valid = False
-        while not valid:
-            if i > 0:
-                p.removeBody(drawer_id)
-                p.removeBody(tray_id)
-                p.removeBody(push_obj_id)
-                p.removeBody(pickplace_obj_id)
-
-            drawer_id, tray_id = self.drawer_util.spawn_obj()
-            push_obj_id = self.push_obj_util.spawn_obj()
-            pickplace_obj_id = self.pickplace_obj_util.spawn_obj()
+    
+        if drawer_state is not None and push_obj_state is not None and pickplace_obj_state is not None \
+            and target_object is not None and target_position is not None:
+            drawer_id, tray_id = self.drawer_util.spawn_obj(drawer_state)
+            push_obj_id = self.push_obj_util.spawn_obj(push_obj_state)
+            pickplace_obj_id = self.pickplace_obj_util.spawn_obj(pickplace_obj_state)
             step_simulation(self.num_sim_steps_reset)
-
             valid = True
-            # Check all objects within workspace
-            for pos in [
-                get_drawer_pos(drawer_id),
-                get_drawer_frame_pos(drawer_id),
-                get_drawer_handle_pos(drawer_id),
-                get_object_position(push_obj_id)[0],
-                get_object_position(pickplace_obj_id)[0],
-            ]:
-                valid = valid and self._pos_in_gripper_workspace(pos)
+        else:
+            i = 0
+            valid = False
+            while not valid:
+                if i > 0:
+                    p.removeBody(drawer_id)
+                    p.removeBody(tray_id)
+                    p.removeBody(push_obj_id)
+                    p.removeBody(pickplace_obj_id)
 
-            # Check collision between push object and drawer
-            valid = valid and \
-                np.linalg.norm(
-                    get_drawer_pos(drawer_id) - get_object_position(push_obj_id)[0]
-                ) > min_distances['drawer_push']
-            valid = valid and \
-                np.linalg.norm(
-                    get_drawer_frame_pos(drawer_id) - get_object_position(push_obj_id)[0]
-                ) > min_distances['drawer_push']
-            
-            # Check collision between pnp object and push object
-            # valid = valid and \
-            #     np.linalg.norm(
-            #         get_object_position(push_obj_id)[0] - get_object_position(pickplace_obj_id)[0]
-            #     ) > min_distances['pnp_push']
-            
-            # Check collision between pnp object and drawer handle
-            # valid = valid and \
-            #     np.linalg.norm(
-            #         get_drawer_handle_pos(drawer_id) - get_object_position(pickplace_obj_id)[0]
-            #     ) > min_distances['drawer_pnp']
+                drawer_id, tray_id = self.drawer_util.spawn_obj()
+                push_obj_id = self.push_obj_util.spawn_obj()
+                pickplace_obj_id = self.pickplace_obj_util.spawn_obj()
+                step_simulation(self.num_sim_steps_reset)
 
-            if i > MAX_ATTEMPTS_TO_GENERATE_OBJECT_POSITIONS:
-                raise ValueError('Could not spawn objects')
-            i += 1
+                valid = True
+                # Check all objects within workspace
+                for pos in [
+                    get_drawer_pos(drawer_id),
+                    get_drawer_frame_pos(drawer_id),
+                    get_drawer_handle_pos(drawer_id),
+                    get_object_position(push_obj_id)[0],
+                    get_object_position(pickplace_obj_id)[0],
+                ]:
+                    valid = valid and self._pos_in_gripper_workspace(pos)
+
+                # Check collision between push object and drawer
+                valid = valid and \
+                    np.linalg.norm(
+                        get_drawer_pos(drawer_id) - get_object_position(push_obj_id)[0]
+                    ) > min_distances['drawer_push']
+                valid = valid and \
+                    np.linalg.norm(
+                        get_drawer_frame_pos(drawer_id) - get_object_position(push_obj_id)[0]
+                    ) > min_distances['drawer_push']
+                
+                # Check collision between pnp object and push object
+                # valid = valid and \
+                #     np.linalg.norm(
+                #         get_object_position(push_obj_id)[0] - get_object_position(pickplace_obj_id)[0]
+                #     ) > min_distances['pnp_push']
+                
+                # Check collision between pnp object and drawer handle
+                # valid = valid and \
+                #     np.linalg.norm(
+                #         get_drawer_handle_pos(drawer_id) - get_object_position(pickplace_obj_id)[0]
+                #     ) > min_distances['drawer_pnp']
+
+                if i > MAX_ATTEMPTS_TO_GENERATE_OBJECT_POSITIONS:
+                    raise ValueError('Could not spawn objects')
+                i += 1
         
         objects = {
             'drawer': drawer_id,
@@ -92,14 +106,15 @@ class SawyerUtil():
             'push_obj': push_obj_id,
             'pickplace_obj': pickplace_obj_id
         }
-        object_positions = [
-            get_drawer_handle_pos(drawer_id),
-            get_object_position(push_obj_id)[0],
-            get_object_position(pickplace_obj_id)[0],
-        ]
+        drawer_state = self.drawer_util.get_state(drawer_id)
+        push_obj_state = self.push_obj_util.get_state(push_obj_id)
+        pickplace_obj_state = self.pickplace_obj_util.get_state(pickplace_obj_id)
+
         target_object, target_object_id, target_position = self.generate_target(objects)
 
-        return objects, object_positions, target_object, target_object_id, target_position
+        return objects, \
+            (drawer_state, push_obj_state, pickplace_obj_state), \
+            (target_object, target_object_id, target_position)
     
     def generate_target(self, objects):
         drawer_id = objects['drawer']

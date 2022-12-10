@@ -4,7 +4,7 @@ import pybullet as p
 
 from roboverse.bullet.control import deg_to_quat, get_object_position	
 from roboverse.bullet import object_utils
-from roboverse.bullet.drawer_utils import open_drawer, close_drawer, get_drawer_handle_pos, get_drawer_frame_pos, get_drawer_frame_yaw
+from roboverse.bullet.drawer_utils import open_drawer, close_drawer, get_drawer_handle_pos, get_drawer_frame_pos, get_drawer_frame_yaw, get_drawer_frame_pos_quat
 
 MAX_ATTEMPTS_TO_GENERATE_OBJECT_POSITIONS = 200
 
@@ -18,11 +18,11 @@ class SawyerObjectUtil():
         self.gripper_pos_high = gripper_pos_high
 
     @abstractmethod
-    def generate_obj_config(self):
+    def generate_obj_config(self, state=None):
         pass
 
-    def spawn_obj(self):
-        config = self.generate_obj_config()
+    def spawn_obj(self, state=None):
+        config = self.generate_obj_config(state=state)
         obj = object_utils.load_object(**config)
 
         return obj
@@ -30,6 +30,14 @@ class SawyerObjectUtil():
     @abstractmethod
     def generate_target(self):
         pass
+
+    def get_state(self, id):
+        return list(np.concatenate(get_object_position(id))) 
+
+    def decode_state(self, state):
+        object_quat = state[:4]
+        object_pos = state[4:7]
+        return object_quat, object_pos
 
 class SawyerDrawerWithTrayObjectUtil(SawyerObjectUtil):
     def __init__(
@@ -61,22 +69,25 @@ class SawyerDrawerWithTrayObjectUtil(SawyerObjectUtil):
         self.tray_scale = tray_scale
         super().__init__(**kwargs)
 
-    def generate_obj_config(self):
-        do_close_drawer = np.random.uniform() < .5
+    def generate_obj_config(self, state=None):
+        if state is None:
+            do_close_drawer = np.random.uniform() < .5
 
-        drawer_quadrant_i = np.random.choice([0, 1])
-        drawer_quadrant = self.quadrants[drawer_quadrant_i]
-        drawer_frame_pos = np.array([
-            drawer_quadrant[0], 
-            drawer_quadrant[1], 
-            self.z,
-        ])
+            drawer_quadrant_i = np.random.choice([0, 1])
+            drawer_quadrant = self.quadrants[drawer_quadrant_i]
+            drawer_frame_pos = np.array([
+                drawer_quadrant[0], 
+                drawer_quadrant[1], 
+                self.z,
+            ])
 
-        if drawer_quadrant_i == 0:
-            drawer_yaw = np.random.uniform(0, 90)
+            if drawer_quadrant_i == 0:
+                drawer_yaw = np.random.uniform(0, 90)
+            else:
+                drawer_yaw = np.random.uniform(90, 180)
+            drawer_quat = deg_to_quat([0, 0, drawer_yaw])
         else:
-            drawer_yaw = np.random.uniform(90, 180)
-        drawer_quat = deg_to_quat([0, 0, drawer_yaw])
+            drawer_quat, drawer_frame_pos, do_close_drawer = self.decode_state(state)
         
         config = {
             'object_name': self.name,
@@ -88,8 +99,8 @@ class SawyerDrawerWithTrayObjectUtil(SawyerObjectUtil):
         }
         return config
     
-    def spawn_obj(self):
-        config = self.generate_obj_config()
+    def spawn_obj(self, state=None):
+        config = self.generate_obj_config(state=state)
         do_close_drawer = config.pop('do_close_drawer')
         drawer = object_utils.load_object(**config)
 
@@ -119,6 +130,17 @@ class SawyerDrawerWithTrayObjectUtil(SawyerObjectUtil):
             coeff=drawer_target_coeff
         )
         return drawer_handle_target_pos
+    
+    def get_state(self, id):
+        state = np.concatenate(get_drawer_frame_pos_quat(id))
+        state = np.append(state, not self._handle_more_open_than_closed(id))
+        return list(state)
+    
+    def decode_state(self, state):
+        drawer_quat = state[:4]
+        drawer_pos = state[4:7]
+        do_close_drawer = state[7:8]
+        return drawer_quat, drawer_pos, do_close_drawer
 
     def _handle_more_open_than_closed(self, id):
         drawer_frame_pos = get_drawer_frame_pos(id)
@@ -150,27 +172,33 @@ class SawyerPushObjectUtil(SawyerObjectUtil):
         ],
         z = -.3525,
         scale = 1.4,
+        quat = deg_to_quat([0, 0, 0]),
         **kwargs,
     ):
         self.name = name
         self.quadrants = quadrants
         self.z = z
         self.scale = scale
+        self.quat = quat
         super().__init__(**kwargs)
     
-    def generate_obj_config(self):
-        quadrant_i = np.random.choice([0, 1, 2, 3])
-        quadrant = self.quadrants[quadrant_i]
-        push_obj_pos = np.array([
-            quadrant[0], 
-            quadrant[1], 
-            self.z,
-        ])
+    def generate_obj_config(self, state=None):
+        if state is None:
+            quadrant_i = np.random.choice([0, 1, 2, 3])
+            quadrant = self.quadrants[quadrant_i]
+            push_obj_pos = np.array([
+                quadrant[0], 
+                quadrant[1], 
+                self.z,
+            ])
+            push_obj_quat = self.quat
+        else:
+            push_obj_quat, push_obj_pos = self.decode_state(state)
 
         config = {
             'object_name': self.name,
             'object_position': push_obj_pos,
-            'object_quat': deg_to_quat([0, 0, 0]),
+            'object_quat': push_obj_quat,
             'scale': self.scale,
         }
         return config
@@ -201,19 +229,22 @@ class SawyerPickPlaceObjectUtil(SawyerObjectUtil):
         self.target_z = target_z
         super().__init__(**kwargs)
     
-    def generate_obj_config(self):
-        pos = np.array([
-            np.random.uniform(self.gripper_pos_low[0], self.gripper_pos_high[0]),
-            np.random.uniform(self.gripper_pos_low[1], self.gripper_pos_high[1]),
-            self.z
-        ])
-        yaw = np.random.uniform(0, 360)
-        quat = deg_to_quat([0, 0, yaw])
+    def generate_obj_config(self, state=None):
+        if state is None:
+            pickplace_obj_pos = np.array([
+                np.random.uniform(self.gripper_pos_low[0], self.gripper_pos_high[0]),
+                np.random.uniform(self.gripper_pos_low[1], self.gripper_pos_high[1]),
+                self.z
+            ])
+            yaw = np.random.uniform(0, 360)
+            pickplace_obj_quat = deg_to_quat([0, 0, yaw])
+        else:
+            pickplace_obj_quat, pickplace_obj_pos = self.decode_state(state)
 
         config = {
             'object_name': self.name,
-            'object_position': pos,
-            'object_quat': quat,
+            'object_position': pickplace_obj_pos,
+            'object_quat': pickplace_obj_quat,
             'scale': self.scale,
         }
         return config

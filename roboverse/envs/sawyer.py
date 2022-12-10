@@ -29,12 +29,10 @@ class SawyerEnv(gym.Env, Serializable):
                  quat_init = bullet.deg_to_quat([180, 0, 0]),
                  max_force=100.,
 
-                 env_observation_img_dim=48,
+                 env_observation_img_dim=192,
                  observation_img_dim=48,
                  downsample=True,
                  transpose_image=False,
-
-                 
                  ):
         assert DoF in [4]
 
@@ -106,10 +104,10 @@ class SawyerEnv(gym.Env, Serializable):
         self._state_query = format_sim_query(
             bodies, links, joints)
 
-    def reset(self):
+    def reset(self, **kwargs):
         bullet.reset()
         bullet.setup_headless()
-        self._load_meshes()
+        self._load_meshes(**kwargs)
         self._format_state_query()
         self._reset_gripper()
 
