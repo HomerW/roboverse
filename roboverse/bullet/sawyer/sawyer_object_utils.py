@@ -35,8 +35,8 @@ class SawyerObjectUtil():
         return list(np.concatenate(get_object_position(id))) 
 
     def decode_state(self, state):
-        object_quat = state[:4]
-        object_pos = state[4:7]
+        object_pos = state[:3]
+        object_quat = state[3:7]
         return object_quat, object_pos
 
 class SawyerDrawerWithTrayObjectUtil(SawyerObjectUtil):
@@ -137,9 +137,9 @@ class SawyerDrawerWithTrayObjectUtil(SawyerObjectUtil):
         return list(state)
     
     def decode_state(self, state):
-        drawer_quat = state[:4]
-        drawer_pos = state[4:7]
-        do_close_drawer = state[7:8]
+        drawer_pos = state[:3]
+        drawer_quat = state[3:7]
+        do_close_drawer = int(state[7:8])
         return drawer_quat, drawer_pos, do_close_drawer
 
     def _handle_more_open_than_closed(self, id):
