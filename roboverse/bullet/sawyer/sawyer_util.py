@@ -110,7 +110,11 @@ class SawyerUtil():
         push_obj_state = self.push_obj_util.get_state(push_obj_id)
         pickplace_obj_state = self.pickplace_obj_util.get_state(pickplace_obj_id)
 
-        target_object, target_object_id, target_position = self.generate_target(objects)
+        if drawer_state is not None and push_obj_state is not None and pickplace_obj_state is not None \
+            and target_object is not None and target_position is not None:
+            target_object_id = objects[target_object]
+        else:
+            target_object, target_object_id, target_position = self.generate_target(objects)
 
         return objects, \
             (drawer_state, push_obj_state, pickplace_obj_state), \
