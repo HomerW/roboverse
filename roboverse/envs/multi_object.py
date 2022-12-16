@@ -12,12 +12,19 @@ class MultiObjectEnv:
     """
     def __init__(self,
                  possible_objects=TRAIN_OBJECTS[:10],
+                 vary_num_objects_range=None,
                  **kwargs):
         assert isinstance(possible_objects, list)
         self.possible_objects = np.asarray(possible_objects)
+        self.vary_num_objects_range = vary_num_objects_range
         super().__init__(**kwargs)
 
     def reset(self, object_names=None, target_object=None, **kwargs):
+        if self.vary_num_objects_range is not None:
+            self.num_objects = np.random.randint(
+                self.vary_num_objects_range[0], 
+                self.vary_num_objects_range[1] + 1
+            )
         if object_names is None or target_object is None:
             chosen_obj_idx = np.random.choice(np.arange((len(self.possible_objects))),
                 size=self.num_objects, replace=False)
@@ -25,7 +32,7 @@ class MultiObjectEnv:
             self.target_object = self.object_names[0]
         else:
             assert target_object in object_names
-            self.object_names = object_names
+            self.object_names = [object_name for object_name in object_names if object_name != '']
             self.target_object = target_object
 
         self.object_scales = dict()

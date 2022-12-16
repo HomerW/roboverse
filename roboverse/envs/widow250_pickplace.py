@@ -6,10 +6,11 @@ from .multi_object import MultiObjectEnv, MultiObjectMultiContainerEnv
 from roboverse.assets.shapenet_object_lists import CONTAINER_CONFIGS
 import os.path as osp
 import pybullet as p
+import numpy as np
 
 OBJECT_IN_GRIPPER_PATH = osp.join(osp.dirname(osp.dirname(osp.realpath(__file__))),
                 'assets/bullet-objects/bullet_saved_states/objects_in_gripper/')
-
+MAX_OBJECTS = 20
 
 class Widow250PickPlaceEnv(Widow250Env):
 
@@ -132,21 +133,25 @@ class Widow250PickPlacePositionEnv(Widow250Env):
                  container_position_low=(.72, 0.28, -.3),
                  container_position_high=(.48, 0.12, -.3),
                  container_position_z=-0.36,
+                 min_distance_between_objects=0.07,
                  min_distance_from_object=0.11,
                  place_success_height_threshold=-0.32,
                  place_success_radius_threshold=0.05,
                  start_object_in_gripper=False,
                  show_place_target=False,
+                 random_object_pose=False,
                  **kwargs
                  ):
         self.container_position_low = container_position_low
         self.container_position_high = container_position_high
         self.container_position_z = container_position_z
+        self.min_distance_between_objects = min_distance_between_objects
         self.min_distance_from_object = min_distance_from_object
         self.place_success_height_threshold = place_success_height_threshold
         self.place_success_radius_threshold = place_success_radius_threshold
         self.start_object_in_gripper = start_object_in_gripper
         self.show_place_target = show_place_target
+        self.random_object_pose = random_object_pose
         super(Widow250PickPlacePositionEnv, self).__init__(**kwargs)
 
     def _load_meshes(self, original_object_positions=None, target_position=None, **kwargs):
@@ -168,6 +173,7 @@ class Widow250PickPlacePositionEnv(Widow250Env):
                 object_utils.generate_object_positions_v3(
                     self.num_objects, self.object_position_low, self.object_position_high,
                     self.container_position_low, self.container_position_high,
+                    min_distance=self.min_distance_between_objects,
                     min_distance_target=self.min_distance_from_object
                 )
         else:
@@ -186,10 +192,14 @@ class Widow250PickPlacePositionEnv(Widow250Env):
         bullet.step_simulation(self.num_sim_steps_reset)
         for object_name, object_position in zip(self.object_names,
                                                 self.original_object_positions):
+            if self.random_object_pose:
+                object_quat = tuple(np.random.uniform(low=0, high=1, size=4))
+            else:
+                object_quat = self.object_orientations[object_name]
             self.objects[object_name] = object_utils.load_object(
                 object_name,
                 object_position,
-                object_quat=self.object_orientations[object_name],
+                object_quat=object_quat,
                 scale=self.object_scales[object_name])
             bullet.step_simulation(self.num_sim_steps_reset)
 
@@ -232,9 +242,21 @@ class Widow250PickPlacePositionEnv(Widow250Env):
             self.place_success_height_threshold,
             self.place_success_radius_threshold)
         
-        info['object_names'] = self.object_names
+        ## Keeping these entries the same length or else hdf5 saving errors during data collection.
+        object_names = list(self.object_names)
+        object_names = tuple(
+            object_names \
+            + ['' for _ in range(MAX_OBJECTS - len(object_names))]
+        )
+        original_object_positions = list(self.original_object_positions)
+        original_object_positions = tuple(
+            original_object_positions + \
+            [-np.ones(3) for _ in range(MAX_OBJECTS - len(original_object_positions))]
+        )
+
+        info['object_names'] = object_names
         info['target_object'] = self.target_object
-        info['initial_positions'] = self.original_object_positions
+        info['initial_positions'] = original_object_positions
         info['target_position'] = self.container_position
 
         return info

@@ -4,7 +4,7 @@ import numpy as np
 from roboverse.bullet.serializable import Serializable
 import roboverse.bullet as bullet
 from roboverse.envs import objects
-from roboverse.bullet import object_utils
+from roboverse.bullet import object_utils, control
 from .multi_object import MultiObjectEnv
 
 END_EFFECTOR_INDEX = 8
@@ -58,6 +58,7 @@ class Widow250Env(gym.Env, Serializable):
 
                  ee_pos_high=(0.8, .4, -0.1),
                  ee_pos_low=(.4, -.2, -.34),
+                 random_ee_pose=False,
                  camera_target_pos=(0.6, 0.2, -0.28),
                  camera_distance=0.29,
                  camera_roll=0.0,
@@ -90,6 +91,7 @@ class Widow250Env(gym.Env, Serializable):
         # TODO(avi): Add limits to ee orientation as well
         self.ee_pos_high = ee_pos_high
         self.ee_pos_low = ee_pos_low
+        self.random_ee_pose = random_ee_pose
 
         bullet.connect_headless(self.gui)
 
@@ -103,7 +105,7 @@ class Widow250Env(gym.Env, Serializable):
             self.num_objects = num_objects
         self.object_position_high = list(object_position_high)
         self.object_position_low = list(object_position_low)
-        self.object_names = object_names
+        self.object_names = [object_name for object_name in object_names if object_name != '']
         self.target_object = target_object
         self.object_scales = dict()
         self.object_orientations = dict()
@@ -182,6 +184,25 @@ class Widow250Env(gym.Env, Serializable):
             self.robot_id,
             self.reset_joint_indices,
             self.reset_joint_values)
+        if self.random_ee_pose:
+            init_pos = np.random.uniform(self.ee_pos_low, self.ee_pos_high)
+            init_pos[2] = -.34
+            init_quat = control.deg_to_quat([90, 0, np.random.uniform(0, 360)])
+            if np.random.choice(2) == 0:
+                init_gripper_state = GRIPPER_CLOSED_STATE
+            else:
+                init_gripper_state = GRIPPER_OPEN_STATE
+
+            bullet.apply_action_ik(
+                init_pos, init_quat, init_gripper_state,
+                self.robot_id,
+                self.end_effector_index, self.movable_joints,
+                lower_limit=JOINT_LIMIT_LOWER,
+                upper_limit=JOINT_LIMIT_UPPER,
+                rest_pose=RESET_JOINT_VALUES,
+                joint_range=JOINT_RANGE,
+                num_sim_steps=self.num_sim_steps_reset)
+
         self.is_gripper_open = True  # TODO(avi): Clean this up
 
         return self.get_observation()
