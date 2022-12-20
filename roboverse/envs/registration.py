@@ -194,7 +194,7 @@ ENVIRONMENT_SPECS = (
         'kwargs': {
             'reward_type': 'pick_place',
             'control_mode': 'discrete_gripper',
-            'observation_img_dim': 48,
+            'observation_img_dim': 128,
             'possible_objects': PICK_PLACE_TRAIN_OBJECTS[:8] + PUSH_TRAIN_OBJECTS[:8],
             'num_objects': 3,
             'load_tray': True,
