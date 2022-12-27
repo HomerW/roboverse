@@ -6,6 +6,7 @@ import roboverse.bullet as bullet
 from roboverse.envs import objects
 from roboverse.bullet import object_utils, control
 from .multi_object import MultiObjectEnv
+from PIL import Image
 
 END_EFFECTOR_INDEX = 8
 RESET_JOINT_VALUES = [1.57, -0.6, -0.6, 0, -1.57, 0., 0., 0.036, -0.036]
@@ -31,6 +32,7 @@ class Widow250Env(gym.Env, Serializable):
                  observation_mode='pixels',
                  observation_img_dim=48,
                  transpose_image=True,
+                 antialias=True,
 
                  object_names=('beer_bottle', 'gatorade'),
                  num_objects=None,
@@ -73,6 +75,7 @@ class Widow250Env(gym.Env, Serializable):
         self.observation_mode = observation_mode
         self.observation_img_dim = observation_img_dim
         self.transpose_image = transpose_image
+        self.antialias = antialias
 
         self.num_sim_steps = num_sim_steps
         self.num_sim_steps_reset = num_sim_steps_reset
@@ -338,11 +341,23 @@ class Widow250Env(gym.Env, Serializable):
         return info
 
     def render_obs(self):
-        img, depth, segmentation = bullet.render(
-            self.observation_img_dim, self.observation_img_dim,
-            self._view_matrix_obs, self._projection_matrix_obs, shadow=0)
+        if self.antialias:
+            render_dim = 2*self.observation_img_dim
+            img, depth, segmentation = bullet.render(
+               render_dim, render_dim,
+                self._view_matrix_obs, self._projection_matrix_obs, shadow=0)
+            img = Image.fromarray(img, 'RGB').resize(
+                [self.observation_img_dim, self.observation_img_dim], 
+                resample=Image.Resampling.LANCZOS)
+            img = np.array(img)
+        else:
+            img, depth, segmentation = bullet.render(
+                self.observation_img_dim, self.observation_img_dim,
+                self._view_matrix_obs, self._projection_matrix_obs, shadow=0)
+        
         if self.transpose_image:
             img = np.transpose(img, (2, 0, 1))
+        
         return img
 
     def _set_action_space(self):
