@@ -52,7 +52,7 @@ if __name__ == "__main__":
 
     script_name = "scripted_collect.py"
     command = ['python',
-               'scripts/{}'.format(script_name),
+               '../roboverse/scripts/{}'.format(script_name),
                '--policy-name={}'.format(args.policy_name),
                '-a{}'.format(args.accept_trajectory_key),
                '-e{}'.format(args.env),

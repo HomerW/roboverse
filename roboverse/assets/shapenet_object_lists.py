@@ -408,7 +408,7 @@ OBJECT_ORIENTATIONS = {
     'pepsi_bottle': (0, 0, 1, 0),
     'two_handled_vase': (0, 0, 1, 0),
     'tongue_chair': (0, 0, 1, 0),
-    'oil_tanker': (0, 0, 0, 0),
+    'oil_tanker': (0, 0, 1, 0),
     'thick_wood_chair': (0, 0, 1, 0),
     'modern_canoe': (0, 0.707, 0.707, 0),
     'pear_ringed_vase': (0, 0, 1, 0),
