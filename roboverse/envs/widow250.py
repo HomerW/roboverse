@@ -346,7 +346,7 @@ class Widow250Env(gym.Env, Serializable):
             img, depth, segmentation = bullet.render(
                render_dim, render_dim,
                 self._view_matrix_obs, self._projection_matrix_obs, shadow=0)
-            img = Image.fromarray(img, 'RGB').resize(
+            img = Image.fromarray(np.uint8(img), 'RGB').resize(
                 [self.observation_img_dim, self.observation_img_dim], 
                 resample=Image.Resampling.LANCZOS)
             img = np.array(img)
