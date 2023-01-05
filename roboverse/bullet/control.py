@@ -113,6 +113,9 @@ def get_object_position(body_id):
         p.getBasePositionAndOrientation(body_id)
     return np.asarray(object_position), np.asarray(object_orientation)
 
+def get_object_aabb(body_id):
+    aabb_min, aabb_max = p.getAABB(body_id)
+    return np.asarray(aabb_min), np.asarray(aabb_max)
 
 def step_simulation(num_sim_steps):
     for _ in range(num_sim_steps):

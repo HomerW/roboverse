@@ -331,6 +331,32 @@ ENVIRONMENT_SPECS = (
         }
     },
     {
+        'id': 'Widow250DiversePickPlacePositionMultiObjectFixGripperFixObjQuatState-v0',
+        'entry_point': 'roboverse.envs.widow250_pickplace:Widow250PickPlacePositionMultiObjectEnv',
+        'kwargs': {
+            'reward_type': 'pick_place',
+            'control_mode': 'discrete_gripper',
+            'observation_mode': 'robot_object_state',
+            'observation_img_dim': 128,
+            'possible_objects': list(set(TRAIN_OBJECTS + GRASP_TRAIN_OBJECTS + PICK_PLACE_TRAIN_OBJECTS)),
+            'num_objects': 4,
+            'load_tray': True,
+            'object_position_high': (.72, 0.33, -.3),
+            'object_position_low': (.48, 0.17, -.3),
+            'container_position_low': (.72, 0.33, -.3),
+            'container_position_high': (.48, 0.17, -.3),
+            # 'min_distance_between_objects': 0.0,
+            # 'min_distance_from_object': 0.0,
+            'random_object_pose': False,
+            'transpose_image': False,
+            'camera_distance': 0.37,
+            'ee_pos_high': (.77, 0.37, -.17),
+            'ee_pos_low': (.43, 0.12, -.34),
+            'random_ee_pose': False,
+            # 'show_place_target': True
+        }
+    },
+    {
         'id': 'Widow250PickPlaceEasy-v0',
         'entry_point': 'roboverse.envs.widow250_pickplace:Widow250PickPlaceEnv',
         'kwargs': {'reward_type': 'pick_place',

@@ -12,20 +12,17 @@ from roboverse.utils import get_timestamp
 
 EPSILON = 0.1
 
-# TODO(avi): Clean this up
-NFS_PATH = "/nfs/kun1/users/avi/imitation_datasets/"
-
-
 def add_transition(
     traj, observation, action, reward, info, agent_info, done, next_observation, img_dim
 ):
-    observation["image"] = np.reshape(
-        np.uint8(observation["image"] * 255.0), (img_dim, img_dim, 3)
-    )
+    if 'image' in observation:
+        observation["image"] = np.reshape(
+            np.uint8(observation["image"] * 255.0), (img_dim, img_dim, 3)
+        )
+        next_observation["image"] = np.reshape(
+            np.uint8(next_observation["image"] * 255.0), (img_dim, img_dim, 3)
+        )
     traj["observations"].append(observation)
-    next_observation["image"] = np.reshape(
-        np.uint8(next_observation["image"] * 255.0), (img_dim, img_dim, 3)
-    )
     traj["next_observations"].append(next_observation)
     traj["actions"].append(action)
     traj["rewards"].append(reward)
@@ -92,10 +89,7 @@ def collect_one_traj(env, policy, num_timesteps, noise, accept_trajectory_key):
 def main(args):
 
     timestamp = get_timestamp()
-    if osp.exists(NFS_PATH):
-        data_save_path = osp.join(NFS_PATH, args.save_directory)
-    else:
-        data_save_path = osp.join(__file__, "../..", "data", args.save_directory)
+    data_save_path = osp.join(__file__, "../..", "data", args.save_directory)
     data_save_path = osp.abspath(data_save_path)
     if not osp.exists(data_save_path):
         os.makedirs(data_save_path)
@@ -147,10 +141,15 @@ def main(args):
     )
     print(path)
     with h5py.File(path, "w") as f:
-        f["observations/images0"] = np.array([o["image"] for t in data for o in t["observations"]])
-        f["next_observations/images0"] = np.array([o["image"] for t in data for o in t["next_observations"]])
-        f["observations/state"] = np.array([o["state"] for t in data for o in t["observations"]]).astype(np.float32)
-        f["next_observations/state"] = np.array([o["state"] for t in data for o in t["next_observations"]]).astype(np.float32)
+        if 'image' in data[0]['observations'][0]:
+            f["observations/images0"] = np.array([o["image"] for t in data for o in t["observations"]])
+            f["next_observations/images0"] = np.array([o["image"] for t in data for o in t["next_observations"]])
+        if 'state' in data[0]['observations'][0]:
+            f["observations/state"] = np.array([o["state"] for t in data for o in t["observations"]]).astype(np.float32)
+            f["next_observations/state"] = np.array([o["state"] for t in data for o in t["next_observations"]]).astype(np.float32)
+        if 'robot_object_state' in data[0]['observations'][0]:
+            f["observations/robot_object_state"] = np.array([o["robot_object_state"] for t in data for o in t["observations"]]).astype(np.float32)
+            f["next_observations/robot_object_state"] = np.array([o["robot_object_state"] for t in data for o in t["next_observations"]]).astype(np.float32)
         f["actions"] = np.array([a for t in data for a in t["actions"]], dtype=np.float32)
         f["terminals"] = np.zeros(f["actions"].shape[0], dtype=np.bool_)
         f["truncates"] = np.zeros(f["actions"].shape[0], dtype=np.bool_)

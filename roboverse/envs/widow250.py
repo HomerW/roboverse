@@ -311,6 +311,14 @@ class Widow250Env(gym.Env, Serializable):
                     (ee_pos, ee_quat, gripper_state, gripper_binary_state)),
                 'image': image_observation
             }
+        elif self.observation_mode == 'robot_object_state':
+            object_aabbs = [control.get_object_aabb(self.objects[obj]) 
+                for obj in self.objects]
+            object_aabbs = np.concatenate([np.concatenate(aabb) for aabb in object_aabbs])
+            observation = {
+                'robot_object_state': np.concatenate(
+                    (ee_pos, ee_quat, gripper_state, gripper_binary_state, object_aabbs))
+            }
         else:
             raise NotImplementedError
 
@@ -386,6 +394,14 @@ class Widow250Env(gym.Env, Serializable):
                       'state': state_space,
                       'object_position': obj_pos_space,
                       'object_orientation': obj_ori_space}
+            self.observation_space = gym.spaces.Dict(spaces)
+        elif self.observation_mode == 'robot_object_state':
+            robot_state_dim = 10  # XYZ + QUAT + GRIPPER_STATE
+            obs_bound = 100
+            robot_object_state_dim = robot_state_dim + 6 * len(self.objects)
+            obs_high = np.ones(robot_object_state_dim) * obs_bound
+            robot_object_state_space = gym.spaces.Box(-obs_high, obs_high)
+            spaces = {'robot_object_state': robot_object_state_space}
             self.observation_space = gym.spaces.Dict(spaces)
         else:
             raise NotImplementedError
