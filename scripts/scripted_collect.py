@@ -7,6 +7,7 @@ from roboverse.policies import policies
 import argparse
 from tqdm import tqdm
 import h5py
+import wandb
 
 from roboverse.utils import get_timestamp
 
@@ -32,7 +33,8 @@ def add_transition(
     return traj
 
 
-def collect_one_traj(env, policy, num_timesteps, noise, accept_trajectory_key):
+def collect_one_traj(env, policy, num_timesteps, noise, accept_trajectory_key, 
+                    log_video=False, step=0):
     num_steps = -1
     rewards = []
     success = False
@@ -83,10 +85,18 @@ def collect_one_traj(env, policy, num_timesteps, noise, accept_trajectory_key):
     if info[accept_trajectory_key]:
         success = True
 
+    if log_video:
+        obses = traj['observations']
+        obses = np.transpose(obses, (0, 3, 1, 2))
+        video = wandb.Video(obses, fps=30, format="gif")
+        wandb.log({"video": video}, step=step)
+
     return traj, success, num_steps
 
 
 def main(args):
+    wandb.init(project='sim_data_collection', entity='andre-he')
+    wandb.config.update(args)
 
     timestamp = get_timestamp()
     data_save_path = osp.join(__file__, "../..", "data", args.save_directory)
@@ -94,7 +104,7 @@ def main(args):
     if not osp.exists(data_save_path):
         os.makedirs(data_save_path)
 
-    env = roboverse.make(args.env_name, gui=args.gui, transpose_image=False)
+    env = roboverse.make(args.env_name, gui=False, transpose_image=False)
 
     data = []
     assert (
@@ -115,7 +125,8 @@ def main(args):
     while num_saved < args.num_trajectories:
         num_attempts += 1
         traj, success, num_steps = collect_one_traj(
-            env, policy, args.num_timesteps, args.noise, accept_trajectory_key
+            env, policy, args.num_timesteps, args.noise, accept_trajectory_key,
+            log_video=num_saved % args.log_interval == 0, step=num_saved
         )
 
         if success:
@@ -177,6 +188,7 @@ if __name__ == "__main__":
     parser.add_argument("-o", "--target-object", type=str)
     parser.add_argument("-d", "--save-directory", type=str, default="")
     parser.add_argument("--noise", type=float, default=0.1)
+    parser.add_argument("--log_interval", type=int, default=100)
     args = parser.parse_args()
 
     main(args)
