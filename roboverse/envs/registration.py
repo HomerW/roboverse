@@ -491,6 +491,33 @@ ENVIRONMENT_SPECS = (
                    }
     },
     {
+        'id': 'Widow250LanguageTrain-v0',
+        'entry_point': 'roboverse.envs.widow250_language'
+                       ':Widow250LanguageEnv',
+        'kwargs': {'reward_type': 'pick_place',
+                   'control_mode': 'discrete_gripper',
+
+                   'load_tray': False,
+
+                   'possible_objects': PICK_PLACE_TRAIN_OBJECTS,
+                   'possible_containers': TRAIN_CONTAINERS,
+
+                   }
+    },
+    {
+        'id': 'Widow250LanguageTest-v0',
+        'entry_point': 'roboverse.envs.widow250_language'
+                       ':Widow250LanguageEnv',
+        'kwargs': {'reward_type': 'pick_place',
+                   'control_mode': 'discrete_gripper',
+
+                   'load_tray': False,
+
+                   'possible_objects': PICK_PLACE_TEST_OBJECTS,
+                   'possible_containers': TEST_CONTAINERS,
+                   }
+    },
+    {
         'id': 'Widow250PickPlaceMultiObjectMultiContainerTrain-v0',
         'entry_point': 'roboverse.envs.widow250_pickplace'
                        ':Widow250PickPlaceMultiObjectMultiContainerEnv',

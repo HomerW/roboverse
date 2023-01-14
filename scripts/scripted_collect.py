@@ -40,6 +40,7 @@ def collect_one_traj(env, policy, num_timesteps, noise, accept_trajectory_key,
     success = False
     img_dim = env.observation_img_dim
     env.reset()
+    description = env.description
     policy.reset()
     time.sleep(1)
     traj = dict(
@@ -87,15 +88,17 @@ def collect_one_traj(env, policy, num_timesteps, noise, accept_trajectory_key,
 
     if log_video:
         obses = traj['observations']
+        obses = [x['image'] for x in obses]
+        obses = np.array(obses)
         obses = np.transpose(obses, (0, 3, 1, 2))
-        video = wandb.Video(obses, fps=30, format="gif")
+        video = wandb.Video(obses, fps=30, format="gif", caption=description)
         wandb.log({"video": video}, step=step)
 
     return traj, success, num_steps
 
 
 def main(args):
-    wandb.init(project='sim_data_collection', entity='andre-he')
+    wandb.init(project='widowx_data', entity='gcrl_language')
     wandb.config.update(args)
 
     timestamp = get_timestamp()
@@ -188,7 +191,7 @@ if __name__ == "__main__":
     parser.add_argument("-o", "--target-object", type=str)
     parser.add_argument("-d", "--save-directory", type=str, default="")
     parser.add_argument("--noise", type=float, default=0.1)
-    parser.add_argument("--log_interval", type=int, default=100)
+    parser.add_argument("--log-interval", type=int, required=True)
     args = parser.parse_args()
 
     main(args)
