@@ -14,7 +14,7 @@ from roboverse.utils import get_timestamp
 EPSILON = 0.1
 
 def add_transition(
-    traj, observation, action, reward, info, agent_info, done, next_observation, img_dim
+    traj, observation, action, reward, info, agent_info, done, next_observation, img_dim, description
 ):
     if 'image' in observation:
         observation["image"] = np.reshape(
@@ -30,6 +30,7 @@ def add_transition(
     traj["terminals"].append(done)
     traj["agent_infos"].append(agent_info)
     traj["env_infos"].append(info)
+    traj["tasks"].append(description)
     return traj
 
 
@@ -51,6 +52,7 @@ def collect_one_traj(env, policy, num_timesteps, noise, accept_trajectory_key,
         terminals=[],
         agent_infos=[],
         env_infos=[],
+        tasks=[],
     )
     for j in range(num_timesteps):
 
@@ -74,6 +76,7 @@ def collect_one_traj(env, policy, num_timesteps, noise, accept_trajectory_key,
             done,
             next_observation,
             img_dim,
+            description,
         )
 
         if info[accept_trajectory_key] and num_steps < 0:
@@ -167,8 +170,9 @@ def main(args):
         f["actions"] = np.array([a for t in data for a in t["actions"]], dtype=np.float32)
         f["terminals"] = np.zeros(f["actions"].shape[0], dtype=np.bool_)
         f["truncates"] = np.zeros(f["actions"].shape[0], dtype=np.bool_)
-        for key in data[0]['env_infos'][0]:
-            f[f"infos/{key}"] = [i[key] for t in data for i in t['env_infos']]
+        f["tasks"] = np.array([l for t in data for l in t["tasks"]], dtype=h5py.special_dtype(vlen=str))
+        #for key in data[0]['env_infos'][0]:
+            #f[f"infos/{key}"] = [i[key] for t in data for i in t['env_infos']]
         f["steps_remaining"] = np.zeros(f["actions"].shape[0], dtype=np.uint32)
         end = 0
         for traj in data:

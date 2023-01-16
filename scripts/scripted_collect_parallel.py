@@ -39,7 +39,7 @@ if __name__ == "__main__":
     parser.add_argument("--target-object", type=str, default="shed")
     parser.add_argument("-p", "--num-parallel-threads", type=int, default=10)
     parser.add_argument("--noise", type=float, default=0.1)
-    parser.add_argument("--log-interval", type=int, required=True)
+    parser.add_argument("--log-interval", type=str, required=True)
 
     args = parser.parse_args()
 
@@ -55,13 +55,13 @@ if __name__ == "__main__":
     command = ['python',
                '../roboverse/scripts/{}'.format(script_name),
                '--policy-name={}'.format(args.policy_name),
+               '--log-interval={}'.format(args.log_interval),
                '-a{}'.format(args.accept_trajectory_key),
                '-e{}'.format(args.env),
                '-n {}'.format(num_trajectories_per_thread),
                '-t {}'.format(args.num_timesteps),
                '-o{}'.format(args.target_object),
                '-d{}'.format(save_directory),
-               '-l{}'.format(args.log_interval),
                ]
 
     if args.save_all:

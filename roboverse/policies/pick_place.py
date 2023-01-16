@@ -197,7 +197,7 @@ class PickPlaceWrist:
             action_xyz = [0., 0., 1.0]
             action_angles = [0., 0., 0.]
             action_gripper = [0.]
-        elif gripper_pickpoint_dist > 0.02 and self.env.is_gripper_open:
+        elif gripper_pickpoint_dist > 0.01 and self.env.is_gripper_open:
             # move near the object
             action_xyz = (self.pick_point - ee_pos) * self.xyz_action_scale
             xy_diff = np.linalg.norm(action_xyz[:2] / self.xyz_action_scale)
