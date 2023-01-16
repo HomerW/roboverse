@@ -20,7 +20,7 @@ class Widow250LanguageEnv(Widow250Env):
     def __init__(self,
                  object_position_high=(.7, .27, -.30),
                  object_position_low=(.5, .18, -.30),
-                 min_distance_between_objects=0.07,
+                 min_distance_between_objects=0.11,
                  min_distance_from_object=0.11,
                  place_success_height_threshold=-0.32,
                  place_success_radius_threshold=0.05,
@@ -28,7 +28,7 @@ class Widow250LanguageEnv(Widow250Env):
                  show_place_target=False,
                  random_object_pose=False,
                  num_objects=2,
-                 num_containers=2,
+                 num_containers=1,
                  possible_objects=TRAIN_OBJECTS[:10],
                  possible_containers=TRAIN_CONTAINERS[:3],
                  observation_img_dim=128,
@@ -57,6 +57,8 @@ class Widow250LanguageEnv(Widow250Env):
         self.min_distance_from_object = container_config['min_distance_from_object']
         self.object_position_low = object_position_low
         self.object_position_high = object_position_high
+        self.goal_object = None
+        self.rel_pos = None
 
 
         super().__init__(object_position_low=object_position_low, object_position_high=object_position_high,
@@ -71,8 +73,7 @@ class Widow250LanguageEnv(Widow250Env):
         if self.load_tray:
             self.tray_id = objects.tray_no_divider_scaled()
 
-        #assert self.container_position_low[2] == self.object_position_low[2]
-
+        use_container = int(self.goal_object is None)
         if original_object_positions is None or target_position is None:
             extra_positions = self.num_objects + self.num_containers - 1
             self.container_position, self.original_object_positions = \
@@ -82,19 +83,33 @@ class Widow250LanguageEnv(Widow250Env):
                     min_distance=self.min_distance_between_objects,
                     min_distance_target=self.min_distance_from_object
                 )
+            if self.goal_object:
+                self.original_object_positions.append(list(self.container_position))
         else:
             self.container_position = target_position
             self.original_object_positions = original_object_positions
 
+        if self.goal_object:
+            goal_object_pos = self.original_object_positions[self.object_names.index(self.goal_object)]
+            delta = dict(
+                left=(1., 0.),
+                right=(-1., 0.),
+                front=(0., 1.),
+            )[self.rel_pos]
+            goal_xy = np.array(goal_object_pos[:2]) + np.array(delta) / 15
+            self.container_position[:2] = goal_xy
+        
         self.container_position[-1] = self.container_position_z
-        self.container_id = object_utils.load_object(self.target_container,
-                                                     self.container_position,
-                                                     self.container_orientation,
-                                                     self.container_scale)
+        
+        if use_container: 
+            self.container_id = object_utils.load_object(self.target_container,
+                                                         self.container_position,
+                                                         self.container_orientation,
+                                                         self.container_scale)
         bullet.step_simulation(self.num_sim_steps_reset)
 
-        for i, container_name in enumerate(self.container_names[1:]):
-            container_position = list(self.original_object_positions[i])
+        for i, container_name in enumerate(self.container_names[use_container:]):
+            container_position = list(self.original_object_positions[i + self.num_objects])
             container_config = CONTAINER_CONFIGS[container_name]
             container_position[-1] = container_config['container_position_z']
             self.objects[container_name] = object_utils.load_object(
@@ -106,7 +121,7 @@ class Widow250LanguageEnv(Widow250Env):
 
         for i in range(self.num_objects):
             object_name = self.object_names[i]
-            object_position = self.original_object_positions[i + self.num_containers - 1]
+            object_position = self.original_object_positions[i]
             if self.random_object_pose:
                 object_quat = tuple(np.random.uniform(low=0, high=1, size=4))
             else:
@@ -142,7 +157,21 @@ class Widow250LanguageEnv(Widow250Env):
             self.object_scales[object_name] = OBJECT_SCALINGS[object_name]
         self.target_object = self.object_names[0]
 
-        description = f'move the {self.target_object} onto the {self.target_container}'
+        task_type = np.random.randint(self.num_objects + self.num_containers)
+
+        if task_type == 0:
+            self.goal_object = self.target_object
+            self.rel_pos = np.random.choice(["right", "left", "front"])
+            description = f'move the {self.target_object} toward the {self.rel_pos}'
+        elif task_type < self.num_objects:
+            self.goal_object = self.object_names[1]
+            self.rel_pos = np.random.choice(["right", "left", "front"])
+            description = f'move the {self.target_object} to the {self.rel_pos} of the {self.goal_object}'
+        else:
+            self.goal_object = None
+            self.rel_pos = None
+            description = f'move the {self.target_object} onto the {self.target_container}'
+
         self.description = description.replace('_', ' ')
 
         super().reset(**kwargs)

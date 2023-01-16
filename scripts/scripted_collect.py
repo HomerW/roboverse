@@ -42,7 +42,7 @@ def collect_one_traj(env, policy, num_timesteps, noise, accept_trajectory_key,
     img_dim = env.observation_img_dim
     env.reset()
     description = env.description
-    policy.reset()
+    policy.reset(env.target_object)
     time.sleep(1)
     traj = dict(
         observations=[],
