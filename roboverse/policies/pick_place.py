@@ -136,12 +136,12 @@ class PickPlaceWrist:
                 np.random.randint(self.env.num_objects)]
         self.pick_point, wrist_target_quat = bullet.get_object_position(
             self.env.objects[self.object_to_target])
-        self.wrist_target = (360 + bullet.quat_to_deg(wrist_target_quat)[2]) % 180
         if self.object_to_target in GRASP_OFFSETS.keys():
             self.pick_point += np.asarray(GRASP_OFFSETS[self.object_to_target])
         self.pick_point[2] = -0.31
         self.drop_point = self.env.container_position
         self.drop_point[2] = -0.29
+        self.wrist_target = (360 + bullet.quat_to_deg(wrist_target_quat)[2]) % 180
         if self.random_neutral_pos:
             self.neutral_pos = np.random.uniform(self.neutral_pos_range[0], self.neutral_pos_range[1])
         else:
@@ -171,7 +171,14 @@ class PickPlaceWrist:
         ee_deg = bullet.quat_to_deg(ee_quat)
         wrist_pos = ee_deg[2]
         # make wrist angle range from 0 to 360 (neutral at 180)
-        wrist_pos = (360 + wrist_pos) % 180
+        wrist_pos = min(
+            [
+                (360 + wrist_pos) % 180 - 180, 
+                (360 + wrist_pos) % 180, 
+                (360 + wrist_pos) % 180 + 180
+            ],
+            key=lambda x: np.abs(x - self.wrist_target)
+        )
         wrist_target_dist = np.abs(wrist_pos - self.wrist_target)
         if wrist_target_dist < 10:
             self.wrist_target_achieved = True
