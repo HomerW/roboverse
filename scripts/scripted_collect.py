@@ -14,7 +14,7 @@ from roboverse.utils import get_timestamp
 EPSILON = 0.1
 
 def add_transition(
-    traj, observation, action, reward, info, agent_info, done, next_observation, img_dim, description
+    traj, observation, action, reward, info, agent_info, done, next_observation, img_dim, task
 ):
     if 'image' in observation:
         observation["image"] = np.reshape(
@@ -30,7 +30,7 @@ def add_transition(
     traj["terminals"].append(done)
     traj["agent_infos"].append(agent_info)
     traj["env_infos"].append(info)
-    traj["tasks"].append(description)
+    traj["tasks"].append(repr(task))
     return traj
 
 
@@ -41,7 +41,7 @@ def collect_one_traj(env, policy, num_timesteps, noise, accept_trajectory_key,
     success = False
     img_dim = env.observation_img_dim
     env.reset()
-    description = env.description
+    task = env.task
     policy.reset(env.target_object)
     time.sleep(1)
     traj = dict(
@@ -76,7 +76,7 @@ def collect_one_traj(env, policy, num_timesteps, noise, accept_trajectory_key,
             done,
             next_observation,
             img_dim,
-            description,
+            task,
         )
 
         if info[accept_trajectory_key] and num_steps < 0:
@@ -94,7 +94,7 @@ def collect_one_traj(env, policy, num_timesteps, noise, accept_trajectory_key,
         obses = [x['image'] for x in obses]
         obses = np.array(obses)
         obses = np.transpose(obses, (0, 3, 1, 2))
-        video = wandb.Video(obses, fps=30, format="gif", caption=description)
+        video = wandb.Video(obses, fps=30, format="gif", caption=task.description)
         wandb.log({"video": video}, step=step)
 
     return traj, success, num_steps

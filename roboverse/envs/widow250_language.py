@@ -10,8 +10,130 @@ from roboverse.assets.shapenet_object_lists import CONTAINER_CONFIGS
 import os.path as osp
 import pybullet as p
 import numpy as np
+import random
 
 MAX_OBJECTS = 20
+
+
+class LanguageTask:
+    def __init__(self, object_pos, container_pos, target, goal, rel):
+        assert goal in container_pos or goal in object_pos
+        assert target in object_pos
+        assert not (set(object_pos) & set(container_pos))
+        assert rel is None or goal in object_pos
+        assert goal not in object_pos or rel in ["left", "right", "front"]
+
+        self.object_pos = object_pos
+        self.container_pos = container_pos
+        self.target = target
+        self.goal = goal
+        self.rel = rel
+
+        if goal == target:
+            self.description = f'move the {self.target} toward the {self.rel}'
+        elif goal in object_pos:
+            self.description = f'move the {self.target} to the {self.rel} of the {self.goal}'
+        else:
+            self.description = f'move the {self.target} onto the {self.goal}'
+
+        self.description = self.description.replace('_', ' ')
+
+        if rel is None:
+            self.goal_pos = np.array(self.container_pos[self.goal])
+        else:
+            delta = dict(
+                left=(1., 0., 0.),
+                right=(-1., 0., 0.),
+                front=(0., 1., 0.),
+            )[self.rel]
+            self.goal_pos = np.array(self.object_pos[self.goal]) + np.array(delta) / 15
+
+    def __str__(self):
+        return self.description
+
+    def __repr__(self):
+        return f'LanguageTask({self.object_pos}, {self.container_pos}, {self.target}, {self.goal}, {self.rel})'
+
+    @classmethod
+    def sample(cls, env):
+        containers = random.sample(list(env.possible_containers), env.num_containers)
+        objects = random.sample(list(env.possible_objects), env.num_objects)
+        target = objects[0]
+        goal = np.random.choice(objects + containers)
+        rel = random.choice(["left", "right", "front"]) if goal in objects else None
+
+        return cls.randomize_locations(env, objects, containers, target, goal, rel)
+
+    @classmethod
+    def randomize_locations(cls, env, objects, containers, target, goal, rel):
+        assert target in env.possible_objects
+        assert goal in env.possible_objects or goal in env.possible_containers
+
+        extra_positions = env.num_objects + env.num_containers - 1
+        container_position, original_object_positions = \
+            object_utils.generate_object_positions_v3(
+                extra_positions, env.object_position_low, env.object_position_high,
+                env.object_position_low, env.object_position_low,
+                min_distance=env.min_distance_between_objects,
+                min_distance_target=env.min_distance_from_object
+            )
+        original_object_positions.append(container_position)
+
+        object_pos = {obj: pos for obj, pos in zip(objects, original_object_positions[:env.num_objects])}
+        container_pos = {cont: pos for cont, pos in zip(containers, original_object_positions[env.num_objects:])}
+
+        return cls(object_pos, container_pos, target, goal, rel)
+
+    @classmethod
+    def parse(cls, description, env):
+        match1 = re.search(r"^move the ([a-zA-Z ]+) to the ([a-zA-Z ]+) of the ([a-zA-Z ]+)$", description)
+        match2 = re.search(r"^move the ([a-zA-Z ]+) toward the ([a-zA-Z ]+)$", description)
+        match3 = re.search(r"^move the ([a-zA-Z ]+) onto the ([a-zA-Z ]+)$", description)
+
+        if match1:
+            target = match1.group(1)
+            rel = match1.group(2)
+            goal = match1.group(3)
+            objects = [target, goal] + random.sample(set(env.possible_objects) - {target, goal}, env.num_objects - 2)
+            containers = random.sample(env.possible_containers, env.num_containers)
+        elif match2:
+            target = match2.group(1)
+            rel = match2.group(2)
+            goal = match2.group(1)
+            objects = [target] + random.sample(set(env.possible_objects) - {target}, env.num_objects - 1)
+            containers = random.sample(env.possible_containers, env.num_containers)
+        elif match3:
+            target = match3.group(1)
+            rel = None
+            goal = match3.group(2)
+            objects = [target] + random.sample(set(env.possible_objects) - {target}, env.num_objects - 1)
+            containers = [goal] + random.sample(set(env.possible_containers) - {goal}, env.num_containers - 1)
+
+        return cls.randomize_locations(env, objects, containers, target, goal, rel)
+
+    def spawn(self, env):
+        for container_name, container_position in self.container_pos.items():
+            container_config = CONTAINER_CONFIGS[container_name]
+            container_position[-1] = container_config['container_position_z']
+            env.objects[container_name] = object_utils.load_object(
+                container_name,
+                container_position,
+                container_config['container_orientation'],
+                container_config['container_scale'])
+            bullet.step_simulation(env.num_sim_steps_reset)
+
+        for object_name, object_position in self.object_pos.items():
+            object_quat = OBJECT_ORIENTATIONS[object_name]
+            env.objects[object_name] = object_utils.load_object(
+                object_name,
+                object_position,
+                object_quat=object_quat,
+                scale=OBJECT_SCALINGS[object_name])
+            bullet.step_simulation(env.num_sim_steps_reset)
+
+        env.container_position = self.goal_pos
+        env.target_object = self.target
+        env.original_object_positions = [*self.object_pos.values(), *self.container_pos.values()]
 
 
 
@@ -46,20 +168,11 @@ class Widow250LanguageEnv(Widow250Env):
         self.num_containers = num_containers
         self.num_objects = num_objects
         
-        self.target_container = possible_containers[0]
-        self.container_names = [self.target_container]
-        container_config = CONTAINER_CONFIGS[self.target_container]
-        self.container_position_low = container_config['container_position_low']
-        self.container_position_high = container_config['container_position_high']
-        self.container_position_z = container_config['container_position_z']
-        self.container_orientation = container_config['container_orientation']
-        self.container_scale = container_config['container_scale']
-        self.min_distance_from_object = container_config['min_distance_from_object']
+        self.task = None
         self.object_position_low = object_position_low
         self.object_position_high = object_position_high
         self.goal_object = None
         self.rel_pos = None
-
 
         super().__init__(object_position_low=object_position_low, object_position_high=object_position_high,
                          observation_img_dim=observation_img_dim, num_objects=num_objects, **kwargs)
@@ -73,111 +186,36 @@ class Widow250LanguageEnv(Widow250Env):
         if self.load_tray:
             self.tray_id = objects.tray_no_divider_scaled()
 
-        use_container = int(self.goal_object is None)
-        if original_object_positions is None or target_position is None:
-            extra_positions = self.num_objects + self.num_containers - 1
-            self.container_position, self.original_object_positions = \
-                object_utils.generate_object_positions_v3(
-                    extra_positions, self.object_position_low, self.object_position_high,
-                    self.container_position_low, self.container_position_high,
-                    min_distance=self.min_distance_between_objects,
-                    min_distance_target=self.min_distance_from_object
-                )
-            if self.goal_object:
-                self.original_object_positions.append(list(self.container_position))
+        if self.task:
+            self.task.spawn(self)
         else:
             self.container_position = target_position
             self.original_object_positions = original_object_positions
 
-        if self.goal_object:
-            goal_object_pos = self.original_object_positions[self.object_names.index(self.goal_object)]
-            delta = dict(
-                left=(1., 0.),
-                right=(-1., 0.),
-                front=(0., 1.),
-            )[self.rel_pos]
-            goal_xy = np.array(goal_object_pos[:2]) + np.array(delta) / 15
-            self.container_position[:2] = goal_xy
-        
-        self.container_position[-1] = self.container_position_z
-        
-        if use_container: 
-            self.container_id = object_utils.load_object(self.target_container,
-                                                         self.container_position,
-                                                         self.container_orientation,
-                                                         self.container_scale)
         bullet.step_simulation(self.num_sim_steps_reset)
 
-        for i, container_name in enumerate(self.container_names[use_container:]):
-            container_position = list(self.original_object_positions[i + self.num_objects])
-            container_config = CONTAINER_CONFIGS[container_name]
-            container_position[-1] = container_config['container_position_z']
-            self.objects[container_name] = object_utils.load_object(
-                container_name,
-                container_position,
-                container_config['container_orientation'],
-                container_config['container_scale'])
-            bullet.step_simulation(self.num_sim_steps_reset)
 
-        for i in range(self.num_objects):
-            object_name = self.object_names[i]
-            object_position = self.original_object_positions[i]
-            if self.random_object_pose:
-                object_quat = tuple(np.random.uniform(low=0, high=1, size=4))
-            else:
-                object_quat = self.object_orientations[object_name]
-            self.objects[object_name] = object_utils.load_object(
-                object_name,
-                object_position,
-                object_quat=object_quat,
-                scale=self.object_scales[object_name])
-            bullet.step_simulation(self.num_sim_steps_reset)
+    def reset(self, task=None, **kwargs):
 
-    def reset(self, **kwargs):
-        chosen_container_idx = np.random.permutation(len(self.possible_containers))[:self.num_containers]
-        self.container_names = tuple(self.possible_containers[chosen_container_idx])
-        self.target_container = self.container_names[0]
-        container_config = CONTAINER_CONFIGS[self.target_container]
-
-        self.container_position_low = self.object_position_low
-        self.container_position_high = self.object_position_high
-        self.container_position_z = container_config['container_position_z']
-        self.container_orientation = container_config['container_orientation']
-        self.container_scale = container_config['container_scale']
-        self.min_distance_from_object = container_config['min_distance_from_object']
-        self.place_success_height_threshold = container_config['place_success_height_threshold']
-        self.place_success_radius_threshold = container_config['place_success_radius_threshold']
-
-        chosen_obj_idx = np.random.permutation(len(self.possible_objects))[:self.num_objects]
-        self.object_names = tuple(self.possible_objects[chosen_obj_idx])
-        self.object_scales = dict()
-        self.object_orientations = dict()
-        for object_name in self.object_names:
-            self.object_orientations[object_name] = OBJECT_ORIENTATIONS[object_name]
-            self.object_scales[object_name] = OBJECT_SCALINGS[object_name]
-        self.target_object = self.object_names[0]
-
-        task_type = np.random.randint(self.num_objects + self.num_containers)
-
-        if task_type == 0:
-            self.goal_object = self.target_object
-            self.rel_pos = np.random.choice(["right", "left", "front"])
-            description = f'move the {self.target_object} toward the {self.rel_pos}'
-        elif task_type < self.num_objects:
-            self.goal_object = self.object_names[1]
-            self.rel_pos = np.random.choice(["right", "left", "front"])
-            description = f'move the {self.target_object} to the {self.rel_pos} of the {self.goal_object}'
-        else:
-            self.goal_object = None
-            self.rel_pos = None
-            description = f'move the {self.target_object} onto the {self.target_container}'
-
-        self.description = description.replace('_', ' ')
-
+        if task is None:
+            task = LanguageTask.sample(self)
+        self.task = task
         super().reset(**kwargs)
+
         ee_pos_init, ee_quat_init = bullet.get_link_state(
             self.robot_id, self.end_effector_index)
         ee_pos_init[2] -= 0.05
+
+        self.container_names = tuple(self.task.container_pos)
+        self.target_container = self.task.goal if self.task.goal in self.task.container_pos else self.container_names[0]
+        container_config = CONTAINER_CONFIGS[self.target_container]
+        self.place_success_height_threshold = container_config['place_success_height_threshold']
+        self.place_success_radius_threshold = container_config['place_success_radius_threshold']
+
+        self.object_names = tuple(self.task.object_pos)
+        self.target_object = self.task.target
+
+        self.description = self.task.description
 
         if self.start_object_in_gripper:
             bullet.load_state(osp.join(OBJECT_IN_GRIPPER_PATH,
