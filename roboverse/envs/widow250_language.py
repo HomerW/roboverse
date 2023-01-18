@@ -52,7 +52,7 @@ class LanguageTask:
         return self.description
 
     def __repr__(self):
-        return f'LanguageTask({self.object_pos}, {self.container_pos}, {self.target}, {self.goal}, {self.rel})'
+        return f'LanguageTask({repr(self.object_pos)}, {repr(self.container_pos)}, {repr(self.target)}, {repr(self.goal)}, {repr(self.rel)})'
 
     @classmethod
     def sample(cls, env):
