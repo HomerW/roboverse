@@ -1,7 +1,7 @@
 import numpy as np
 import roboverse.bullet as bullet
 
-from roboverse.assets.shapenet_object_lists import GRASP_OFFSETS
+from roboverse.assets.shapenet_object_lists import GRASP_OFFSETS, GRASP_YAW_OFFSETS
 from .drawer_open_transfer import DrawerOpenTransfer
 
 
@@ -109,7 +109,7 @@ class PickPlace:
 
 class PickPlaceWrist:
 
-    def __init__(self, env, pick_height=-0.31, pick_height_noise=0.01, xyz_action_scale=7.0,
+    def __init__(self, env, pick_height=-0.28, pick_height_noise=0.01, xyz_action_scale=7.0,
                  wrist_action_scale=4.0, pick_point_noise=0.00, drop_point_noise=0.00, 
                  before_pick_height=-0.2, after_place_height=-0.25, 
                  use_neutral_action=False, random_neutral_pos=False, 
@@ -136,12 +136,22 @@ class PickPlaceWrist:
                 np.random.randint(self.env.num_objects)]
         self.pick_point, wrist_target_quat = bullet.get_object_position(
             self.env.objects[self.object_to_target])
-        if self.object_to_target in GRASP_OFFSETS.keys():
-            self.pick_point += np.asarray(GRASP_OFFSETS[self.object_to_target])
         self.pick_point[2] = -0.31
+        self.wrist_target = (360 + bullet.quat_to_deg(wrist_target_quat)[2]) % 180
+        if self.object_to_target in GRASP_YAW_OFFSETS.keys():
+            offset = np.asarray(GRASP_YAW_OFFSETS[self.object_to_target])
+            self.wrist_target += offset 
+            self.wrist_target = (360 + self.wrist_target) % 180
+        rot_angle = (bullet.quat_to_deg(wrist_target_quat)[2] - 180) * np.pi/180
+        rot_matrix = np.array([
+            [np.cos(rot_angle), -np.sin(rot_angle)],
+            [np.sin(rot_angle), np.cos(rot_angle)]
+        ])
+        if self.object_to_target in GRASP_OFFSETS.keys():
+            offset = np.asarray(GRASP_OFFSETS[self.object_to_target])
+            self.pick_point += np.append(rot_matrix @ offset[:2], offset[2])
         self.drop_point = self.env.container_position
         self.drop_point[2] = -0.29
-        self.wrist_target = (360 + bullet.quat_to_deg(wrist_target_quat)[2]) % 180
         if self.random_neutral_pos:
             self.neutral_pos = np.random.uniform(self.neutral_pos_range[0], self.neutral_pos_range[1])
         else:
@@ -153,6 +163,10 @@ class PickPlaceWrist:
         self.gripper_lifted_after_place = False
 
     def get_action(self):
+        # Update drop point
+        self.drop_point = self.env.container_position
+        self.drop_point[2] = -0.29
+
         ee_pos, ee_quat = bullet.get_link_state(
             self.env.robot_id, self.env.end_effector_index)
         object_pos, _ = bullet.get_object_position(
@@ -161,6 +175,7 @@ class PickPlaceWrist:
             self.object_lifted = object_pos[2] > self.pick_height
         gripper_pickpoint_dist = np.linalg.norm(self.pick_point - ee_pos)
         gripper_droppoint_dist = np.linalg.norm(self.drop_point - ee_pos)
+        gripper_droppoint_dist_xy = np.linalg.norm(self.drop_point[:2] - ee_pos[:2])
         gripper_neutral_dist = np.linalg.norm(self.neutral_pos - ee_pos)
         if self.place_attempted and not self.gripper_lifted_after_place:
             self.gripper_lifted_after_place = ee_pos[2] > self.after_place_height
@@ -231,9 +246,11 @@ class PickPlaceWrist:
             action_xyz = [0., 0., 1.0]
             action_angles = [0., 0., 0.]
             action_gripper = [0.]
-        elif gripper_droppoint_dist > 0.02:
+        elif gripper_droppoint_dist > 0.03:
             # lifted, now need to move towards the container
             action_xyz = (self.drop_point - ee_pos) * self.xyz_action_scale
+            if gripper_droppoint_dist_xy > 0.01:
+                action_xyz[2] = 0.
             action_angles = [0., 0., 0.]
             action_gripper = [0.]
         else:
@@ -256,7 +273,8 @@ class PickPlaceWrist:
 class Push:
 
     def __init__(self, env, xyz_action_scale=4.0, wrist_action_scale=4.0, pick_point_noise=0.00, 
-                 drop_point_noise=0.00, after_place_height=-0.25, use_neutral_action=False):
+                 drop_point_noise=0.00, after_place_height=-0.25, use_neutral_action=False, 
+                 near_object_max_tries=20):
         self.env = env
         self.xyz_action_scale = xyz_action_scale
         self.wrist_action_scale = wrist_action_scale
@@ -264,6 +282,9 @@ class Push:
         self.drop_point_noise = drop_point_noise
         self.after_place_height = after_place_height
         self.use_neutral_action = use_neutral_action
+
+        self.neutral_pos = self.env.ee_pos_init
+        self.near_object_max_tries = near_object_max_tries
         self.reset()
 
     def reset(self, object_to_target=None):
@@ -300,6 +321,8 @@ class Push:
         self.target_reached = False
         self.wrist_target_achieved = False
 
+        self.near_object_try_counter = 0
+
     def get_action(self):
         ee_pos, ee_quat = bullet.get_link_state(
             self.env.robot_id, self.env.end_effector_index)
@@ -316,7 +339,7 @@ class Push:
         gripper_lifted_after_place = ee_pos[2] > self.after_place_height
         done = False
 
-        if (gripper_pickpoint_dist > 0.02) and not self.object_reached:
+        if (self.near_object_try_counter <= self.near_object_max_tries and gripper_pickpoint_dist > 0.02) and not self.object_reached:
             # move near the object
             action_xyz = (self.pick_point - ee_pos) * self.xyz_action_scale
             xy_diff = np.linalg.norm(action_xyz[:2] / self.xyz_action_scale)
@@ -328,7 +351,8 @@ class Push:
                 wrist_action = (self.wrist_target - wrist_pos) * self.wrist_action_scale
             action_angles = [0., 0., wrist_action]
             action_gripper = [0.0]
-        elif gripper_droppoint_dist > 0.02 and not self.target_reached:
+            self.near_object_try_counter += 1
+        elif (self.near_object_try_counter > self.near_object_max_tries or gripper_droppoint_dist > 0.02) and not self.target_reached:
             # now need to move towards the target
             self.object_reached = True
             action_xyz = (self.drop_point - ee_pos) * self.xyz_action_scale
@@ -337,14 +361,14 @@ class Push:
         elif not gripper_lifted_after_place:
             # lifting gripper straight up after placing to avoid knocking the object
             self.target_reached = True
-            action_xyz = (self.env.ee_pos_init - ee_pos) * self.xyz_action_scale
+            action_xyz = (self.neutral_pos - ee_pos) * self.xyz_action_scale
             action_xyz[0] = 0.
             action_xyz[1] = 0.
             action_angles = [0., 0., 0.]
             action_gripper = [0.]
         else:
             # move to neutral
-            action_xyz = (self.env.ee_pos_init - ee_pos) * self.xyz_action_scale
+            action_xyz = (self.neutral_pos - ee_pos) * self.xyz_action_scale
             wrist_action = (180 - wrist_pos) * self.wrist_action_scale
             action_angles = [0., 0., wrist_action]
             action_gripper = [0.]
@@ -369,13 +393,32 @@ class PickPlacePush:
         # self.object_to_target = self.env.object_names[
         #         np.random.randint(self.env.num_objects)]
         self.object_to_target = self.env.target_object
-        if "cylinder" in self.object_to_target:
+        if "cylinder" in self.object_to_target or "pushable" in self.object_to_target:
             self.push_policy.reset(object_to_target=self.object_to_target)
         else:
             self.pick_place_policy.reset(object_to_target=self.object_to_target)
     
     def get_action(self):
-        if "cylinder" in self.object_to_target:
+        if "cylinder" in self.object_to_target or "pushable" in self.object_to_target:
+            return self.push_policy.get_action()
+        else:
+            return self.pick_place_policy.get_action()
+
+class PickPlaceWristPush:
+    def __init__(self, env, pick_place_kwargs={}, push_kwargs={}):
+        self.env = env
+        self.pick_place_policy = PickPlaceWrist(env, **pick_place_kwargs)
+        self.push_policy = Push(env, **push_kwargs)
+
+    def reset(self):
+        self.object_to_target = self.env.target_object
+        if "cylinder" in self.object_to_target or "pushable" in self.object_to_target:
+            self.push_policy.reset(object_to_target=self.object_to_target)
+        else:
+            self.pick_place_policy.reset(object_to_target=self.object_to_target)
+    
+    def get_action(self):
+        if "cylinder" in self.object_to_target or "pushable" in self.object_to_target:
             return self.push_policy.get_action()
         else:
             return self.pick_place_policy.get_action()

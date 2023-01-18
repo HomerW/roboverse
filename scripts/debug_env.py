@@ -9,7 +9,7 @@ def main(_):
     env = roboverse.make(FLAGS.env_name, transpose_image=False, gui=True)
     for _ in range(10):
         env.reset()
-        # input()
+        input()
         # for _ in range(10):
         #     env.step([0, 0, -1, 0, 0])
         # input()

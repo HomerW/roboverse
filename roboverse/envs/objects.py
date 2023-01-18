@@ -21,6 +21,13 @@ def table():
                           globalScaling=1.0)
     return table_id
 
+def table_centered():
+    p.setAdditionalSearchPath(pybullet_data.getDataPath())
+    table_id = p.loadURDF('table/table.urdf',
+                          basePosition=[.625, -.2, -1],
+                          baseOrientation=[0, 0, 0.707107, 0.707107],
+                          globalScaling=1.0)
+    return table_id
 
 def tray(base_position=(.60, 0.3, -.37), scale=0.5):
     p.setAdditionalSearchPath(pybullet_data.getDataPath())
@@ -57,3 +64,13 @@ def widow250():
                              baseOrientation=bullet.deg_to_quat([0., 0., 0])
                              )
     return widow250_id
+
+
+def back_wall():
+    wall_path = os.path.join(ASSET_PATH,
+                            'bullet-objects/wall/back_wall.urdf')
+    wall_id = p.loadURDF(wall_path,
+                        basePosition=(.6, 0.25, -.3),
+                        baseOrientation=(0, 0, 0.707107, 0.707107),
+                        globalScaling=0.25)
+    return wall_id

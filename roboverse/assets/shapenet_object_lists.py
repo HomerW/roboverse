@@ -447,5 +447,11 @@ GRASP_OFFSETS = {
     'pear_ringed_vase': (0.0, 0.01, 0.0),
     'teepee': (0.0, 0.04, 0.0),
     'long_vase': (0.0, 0.03, 0.0),
-    'ball': (0, 0, 0.0)
+    'ball': (0, 0, 0.0),
+    'spoon': (0, 0.0, 0.0),
+    'pan': (-0.075, 0.0, 0.0),
+}
+
+GRASP_YAW_OFFSETS = {
+    'pan': 90,
 }

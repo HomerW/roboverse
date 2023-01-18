@@ -82,6 +82,63 @@ def generate_object_positions_single(
     return large_object_position, small_object_positions
 
 
+def generate_object_positions_table_arrangement(
+    object_position_low, object_position_high, 
+    target_position_low, target_position_high, 
+    min_distance=0.07, min_distance_target=0.1):
+
+    valid = False
+    max_attempts = MAX_ATTEMPTS_TO_GENERATE_OBJECT_POSITIONS
+    i = 0
+    pickplace_object_in_pot = np.random.uniform() < 0.5
+    # ## Debugging
+    # pickplace_object_in_pot = True
+    while not valid:
+        target_position = np.random.uniform(
+            low=target_position_low, high=target_position_high)
+        object_positions = dict()
+        if pickplace_object_in_pot:
+            possible_target_objects = ['container', 'utensil', 'push']
+            for object in possible_target_objects:
+                object_position = np.random.uniform(
+                    low=object_position_low, high=object_position_high)
+                object_positions[object] = object_position
+            object_positions['pickplace'] = object_positions['container'] 
+            target_object = np.random.choice(possible_target_objects)
+
+            # ## Debugging
+            # target_object = 'container'
+        else:
+            possible_target_objects = ['container', 'utensil', 'push', 'pickplace']
+            for object in possible_target_objects:
+                object_position = np.random.uniform(
+                    low=object_position_low, high=object_position_high)
+                object_positions[object] = object_position
+            target_object = np.random.choice(possible_target_objects)
+
+            # ## Debugging
+            # target_object = 'container'
+
+            # If pickplace object not in container, target position will be in container
+            if target_object == 'pickplace':
+                target_position = object_positions['container']
+
+        valid = True
+        for (obj1, obj2) in combinations(possible_target_objects, r=2):
+            pos1 = object_positions[obj1]
+            pos2 = object_positions[obj2]
+            valid = valid and \
+                np.linalg.norm(pos1 - pos2) > min_distance
+        if pickplace_object_in_pot or target_object != 'pickplace':
+            for pos in object_positions.values():
+                valid = valid and \
+                    np.linalg.norm(pos - target_position) > min_distance_target
+
+        if i > max_attempts:
+            raise ValueError('Min distance could not be assured')
+
+    return target_object, target_position, object_positions
+
 def generate_object_positions_v3(
     num_objects, object_position_low, object_position_high, 
     target_position_low, target_position_high, 
@@ -264,6 +321,12 @@ BULLET_OBJECT_SPECS = dict(
         baseOrientation=(0, 0, 0.707107, 0.707107),
         globalScaling=0.07,
     ),
+    pan=dict(
+        fileName=os.path.join(BASE_ASSET_PATH, 'pan/pan.urdf'),
+        basePosition=(.65, 0.3, -.3),
+        baseOrientation=(0, 0, 0.707107, 0.707107),
+        globalScaling=0.8,
+    ),
     drawer=dict(
         fileName=os.path.join(
             BASE_ASSET_PATH, 'drawer/drawer_with_tray_inside.urdf'),
@@ -383,6 +446,28 @@ BULLET_OBJECT_SPECS = dict(
         basePosition=(.7, 0.2, -.35),
         baseOrientation=(0, 0, 0.707107, 0.707107),
         globalScaling=0.1,
+    ),
+    spoon=dict(
+        fileName=os.path.join(
+            BASE_ASSET_PATH, 'spoon/spoon.urdf'),
+        basePosition=(.6, 0.25, -.3),
+        baseOrientation=(0, 0, 0.707107, 0.707107),
+        globalScaling=0.25,
+    ),
+    can_pushable=dict(
+        fileName=os.path.join(
+            BASE_ASSET_PATH, 'can/can.urdf'),
+        basePosition=(.6, 0.25, -.3),
+        baseOrientation=(0, 0, 0.707107, 0.707107),
+        globalScaling=0.25, 
+    ),
+    basket_pushable=dict(
+        fileName=os.path.join(
+            BASE_ASSET_PATH, 'basket/basket.urdf'),
+        basePosition=(.65, 0.3, -.3),
+        baseOrientation=(0, 0, 0.707107, 0.707107),
+        globalScaling=0.8,
+        useFixedBase=0,
     ),
 )
 
