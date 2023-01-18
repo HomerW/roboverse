@@ -14,7 +14,7 @@ from roboverse.utils import get_timestamp
 EPSILON = 0.1
 
 def add_transition(
-    traj, observation, action, reward, info, agent_info, done, next_observation, img_dim, task
+    traj, observation, action, reward, info, agent_info, done, next_observation, img_dim, description, task
 ):
     if 'image' in observation:
         observation["image"] = np.reshape(
@@ -30,6 +30,7 @@ def add_transition(
     traj["terminals"].append(done)
     traj["agent_infos"].append(agent_info)
     traj["env_infos"].append(info)
+    traj["descriptions"].append(description)
     traj["tasks"].append(repr(task))
     return traj
 
@@ -52,6 +53,7 @@ def collect_one_traj(env, policy, num_timesteps, noise, accept_trajectory_key,
         terminals=[],
         agent_infos=[],
         env_infos=[],
+        descriptions=[],
         tasks=[],
     )
     for j in range(num_timesteps):
@@ -76,6 +78,7 @@ def collect_one_traj(env, policy, num_timesteps, noise, accept_trajectory_key,
             done,
             next_observation,
             img_dim,
+            task.description,
             task,
         )
 
@@ -170,6 +173,7 @@ def main(args):
         f["actions"] = np.array([a for t in data for a in t["actions"]], dtype=np.float32)
         f["terminals"] = np.zeros(f["actions"].shape[0], dtype=np.bool_)
         f["truncates"] = np.zeros(f["actions"].shape[0], dtype=np.bool_)
+        f["descriptions"] = np.array([l for t in data for l in t["descriptions"]], dtype=h5py.special_dtype(vlen=str))
         f["tasks"] = np.array([l for t in data for l in t["tasks"]], dtype=h5py.special_dtype(vlen=str))
         #for key in data[0]['env_infos'][0]:
             #f[f"infos/{key}"] = [i[key] for t in data for i in t['env_infos']]
