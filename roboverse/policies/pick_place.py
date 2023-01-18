@@ -274,7 +274,7 @@ class Push:
 
     def __init__(self, env, xyz_action_scale=4.0, wrist_action_scale=4.0, pick_point_noise=0.00, 
                  drop_point_noise=0.00, after_place_height=-0.25, use_neutral_action=False, 
-                 near_object_max_tries=20):
+                 near_object_max_tries=30):
         self.env = env
         self.xyz_action_scale = xyz_action_scale
         self.wrist_action_scale = wrist_action_scale
@@ -294,10 +294,10 @@ class Push:
             self.object_to_target = self.env.object_names[
                 np.random.randint(self.env.num_objects)]
         self.drop_point = self.env.container_position
-        self.drop_point[2] = -0.28
+        self.drop_point[2] = -0.3
         self.pick_point = bullet.get_object_position(
             self.env.objects[self.object_to_target])[0]
-        self.pick_point[2] = -0.28
+        self.pick_point[2] = -0.3
 
         # calculate wrist angle given push direction
         push_direction = self.drop_point - self.pick_point
