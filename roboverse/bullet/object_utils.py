@@ -91,8 +91,8 @@ def generate_object_positions_table_arrangement(
     max_attempts = MAX_ATTEMPTS_TO_GENERATE_OBJECT_POSITIONS
     i = 0
     pickplace_object_in_pot = np.random.uniform() < 0.5
-    # ## Debugging
-    # pickplace_object_in_pot = True
+    ## Debugging
+    pickplace_object_in_pot = True
     while not valid:
         target_position = np.random.uniform(
             low=target_position_low, high=target_position_high)
@@ -106,8 +106,8 @@ def generate_object_positions_table_arrangement(
             object_positions['pickplace'] = object_positions['container'] 
             target_object = np.random.choice(possible_target_objects)
 
-            # ## Debugging
-            # target_object = 'container'
+            ## Debugging
+            target_object = 'push'
         else:
             possible_target_objects = ['container', 'utensil', 'push', 'pickplace']
             for object in possible_target_objects:
@@ -116,8 +116,8 @@ def generate_object_positions_table_arrangement(
                 object_positions[object] = object_position
             target_object = np.random.choice(possible_target_objects)
 
-            # ## Debugging
-            # target_object = 'container'
+            ## Debugging
+            target_object = 'push'
 
             # If pickplace object not in container, target position will be in container
             if target_object == 'pickplace':
@@ -454,16 +454,224 @@ BULLET_OBJECT_SPECS = dict(
         baseOrientation=(0, 0, 0.707107, 0.707107),
         globalScaling=0.25,
     ),
-    can_pushable=dict(
+    ## Cuboid
+    white_cuboid=dict(
         fileName=os.path.join(
-            BASE_ASSET_PATH, 'can/can.urdf'),
+            BASE_ASSET_PATH, 'cuboid/white_cuboid.urdf'),
+        basePosition=(.65, 0.3, -.3),
+        baseOrientation=(0, 0, 0.707107, 0.707107),
+        globalScaling=0.8,
+        useFixedBase=0,
+    ),
+    black_cuboid=dict(
+        fileName=os.path.join(
+            BASE_ASSET_PATH, 'cuboid/black_cuboid.urdf'),
+        basePosition=(.65, 0.3, -.3),
+        baseOrientation=(0, 0, 0.707107, 0.707107),
+        globalScaling=0.8,
+        useFixedBase=0,
+    ),
+    red_cuboid=dict(
+        fileName=os.path.join(
+            BASE_ASSET_PATH, 'cuboid/red_cuboid.urdf'),
+        basePosition=(.65, 0.3, -.3),
+        baseOrientation=(0, 0, 0.707107, 0.707107),
+        globalScaling=0.8,
+        useFixedBase=0,
+    ),
+    blue_cuboid=dict(
+        fileName=os.path.join(
+            BASE_ASSET_PATH, 'cuboid/blue_cuboid.urdf'),
+        basePosition=(.65, 0.3, -.3),
+        baseOrientation=(0, 0, 0.707107, 0.707107),
+        globalScaling=0.8,
+        useFixedBase=0,
+    ),
+    green_cuboid=dict(
+        fileName=os.path.join(
+            BASE_ASSET_PATH, 'cuboid/green_cuboid.urdf'),
+        basePosition=(.65, 0.3, -.3),
+        baseOrientation=(0, 0, 0.707107, 0.707107),
+        globalScaling=0.8,
+        useFixedBase=0,
+    ),
+    yellow_cuboid=dict(
+        fileName=os.path.join(
+            BASE_ASSET_PATH, 'cuboid/yellow_cuboid.urdf'),
+        basePosition=(.65, 0.3, -.3),
+        baseOrientation=(0, 0, 0.707107, 0.707107),
+        globalScaling=0.8,
+        useFixedBase=0,
+    ),
+    cyan_cuboid=dict(
+        fileName=os.path.join(
+            BASE_ASSET_PATH, 'cuboid/cyan_cuboid.urdf'),
+        basePosition=(.65, 0.3, -.3),
+        baseOrientation=(0, 0, 0.707107, 0.707107),
+        globalScaling=0.8,
+        useFixedBase=0,
+    ),
+    magenta_cuboid=dict(
+        fileName=os.path.join(
+            BASE_ASSET_PATH, 'cuboid/magenta_cuboid.urdf'),
+        basePosition=(.65, 0.3, -.3),
+        baseOrientation=(0, 0, 0.707107, 0.707107),
+        globalScaling=0.8,
+        useFixedBase=0,
+    ),
+    ## Cans
+    tomato_can_pushable=dict(
+        fileName=os.path.join(
+            BASE_ASSET_PATH, 'can/tomato_can/tomato_can.urdf'),
         basePosition=(.6, 0.25, -.3),
         baseOrientation=(0, 0, 0.707107, 0.707107),
         globalScaling=0.25, 
     ),
-    basket_pushable=dict(
+    tuna_fish_can_pushable=dict(
         fileName=os.path.join(
-            BASE_ASSET_PATH, 'basket/basket.urdf'),
+            BASE_ASSET_PATH, 'can/tuna_fish_can/tuna_fish_can.urdf'),
+        basePosition=(.6, 0.25, -.3),
+        baseOrientation=(0, 0, 0.707107, 0.707107),
+        globalScaling=0.25, 
+    ),
+    tuna_fish_can_tall_pushable=dict(
+        fileName=os.path.join(
+            BASE_ASSET_PATH, 'can/tuna_fish_can/tuna_fish_can_tall.urdf'),
+        basePosition=(.6, 0.25, -.3),
+        baseOrientation=(0, 0, 0.707107, 0.707107),
+        globalScaling=0.25, 
+    ),
+    coke_can_pushable=dict(
+        fileName=os.path.join(
+            BASE_ASSET_PATH, 'can/coke_can/coke_can.urdf'),
+        basePosition=(.6, 0.25, -.3),
+        baseOrientation=(0, 0, 0.707107, 0.707107),
+        globalScaling=0.25, 
+    ),
+    white_can_pushable=dict(
+        fileName=os.path.join(
+            BASE_ASSET_PATH, 'can/can/white_can.urdf'),
+        basePosition=(.6, 0.25, -.3),
+        baseOrientation=(0, 0, 0.707107, 0.707107),
+        globalScaling=0.25,  
+    ),
+    black_can_pushable=dict(
+        fileName=os.path.join(
+            BASE_ASSET_PATH, 'can/can/black_can.urdf'),
+        basePosition=(.6, 0.25, -.3),
+        baseOrientation=(0, 0, 0.707107, 0.707107),
+        globalScaling=0.25,  
+    ),
+    red_can_pushable=dict(
+        fileName=os.path.join(
+            BASE_ASSET_PATH, 'can/can/red_can.urdf'),
+        basePosition=(.6, 0.25, -.3),
+        baseOrientation=(0, 0, 0.707107, 0.707107),
+        globalScaling=0.25,  
+    ),
+    blue_can_pushable=dict(
+        fileName=os.path.join(
+            BASE_ASSET_PATH, 'can/can/blue_can.urdf'),
+        basePosition=(.6, 0.25, -.3),
+        baseOrientation=(0, 0, 0.707107, 0.707107),
+        globalScaling=0.25,  
+    ),
+    green_can_pushable=dict(
+        fileName=os.path.join(
+            BASE_ASSET_PATH, 'can/can/green_can.urdf'),
+        basePosition=(.6, 0.25, -.3),
+        baseOrientation=(0, 0, 0.707107, 0.707107),
+        globalScaling=0.25,  
+    ),
+    yellow_can_pushable=dict(
+        fileName=os.path.join(
+            BASE_ASSET_PATH, 'can/can/yellow_can.urdf'),
+        basePosition=(.6, 0.25, -.3),
+        baseOrientation=(0, 0, 0.707107, 0.707107),
+        globalScaling=0.25,  
+    ),
+    cyan_can_pushable=dict(
+        fileName=os.path.join(
+            BASE_ASSET_PATH, 'can/can/cyan_can.urdf'),
+        basePosition=(.6, 0.25, -.3),
+        baseOrientation=(0, 0, 0.707107, 0.707107),
+        globalScaling=0.25,  
+    ),
+    magenta_can_pushable=dict(
+        fileName=os.path.join(
+            BASE_ASSET_PATH, 'can/can/magenta_can.urdf'),
+        basePosition=(.6, 0.25, -.3),
+        baseOrientation=(0, 0, 0.707107, 0.707107),
+        globalScaling=0.25,  
+    ),
+    ## Containers
+    steel_pot_pushable=dict(
+        fileName=os.path.join(
+            BASE_ASSET_PATH, 'pot/steel_pot.urdf'),
+        basePosition=(.65, 0.3, -.3),
+        baseOrientation=(0, 0, 0.707107, 0.707107),
+        globalScaling=0.8,
+        useFixedBase=0,
+    ),
+    white_pot_pushable=dict(
+        fileName=os.path.join(
+            BASE_ASSET_PATH, 'pot/white_pot.urdf'),
+        basePosition=(.65, 0.3, -.3),
+        baseOrientation=(0, 0, 0.707107, 0.707107),
+        globalScaling=0.8,
+        useFixedBase=0,
+    ),
+    black_pot_pushable=dict(
+        fileName=os.path.join(
+            BASE_ASSET_PATH, 'pot/black_pot.urdf'),
+        basePosition=(.65, 0.3, -.3),
+        baseOrientation=(0, 0, 0.707107, 0.707107),
+        globalScaling=0.8,
+        useFixedBase=0,
+    ),
+    red_pot_pushable=dict(
+        fileName=os.path.join(
+            BASE_ASSET_PATH, 'pot/red_pot.urdf'),
+        basePosition=(.65, 0.3, -.3),
+        baseOrientation=(0, 0, 0.707107, 0.707107),
+        globalScaling=0.8,
+        useFixedBase=0,
+    ),
+    green_pot_pushable=dict(
+        fileName=os.path.join(
+            BASE_ASSET_PATH, 'pot/green_pot.urdf'),
+        basePosition=(.65, 0.3, -.3),
+        baseOrientation=(0, 0, 0.707107, 0.707107),
+        globalScaling=0.8,
+        useFixedBase=0,
+    ),
+    blue_pot_pushable=dict(
+        fileName=os.path.join(
+            BASE_ASSET_PATH, 'pot/blue_pot.urdf'),
+        basePosition=(.65, 0.3, -.3),
+        baseOrientation=(0, 0, 0.707107, 0.707107),
+        globalScaling=0.8,
+        useFixedBase=0,
+    ),
+    cyan_pot_pushable=dict(
+        fileName=os.path.join(
+            BASE_ASSET_PATH, 'pot/cyan_pot.urdf'),
+        basePosition=(.65, 0.3, -.3),
+        baseOrientation=(0, 0, 0.707107, 0.707107),
+        globalScaling=0.8,
+        useFixedBase=0,
+    ),
+    magenta_pot_pushable=dict(
+        fileName=os.path.join(
+            BASE_ASSET_PATH, 'pot/magenta_pot.urdf'),
+        basePosition=(.65, 0.3, -.3),
+        baseOrientation=(0, 0, 0.707107, 0.707107),
+        globalScaling=0.8,
+        useFixedBase=0,
+    ),
+    yellow_pot_pushable=dict(
+        fileName=os.path.join(
+            BASE_ASSET_PATH, 'pot/yellow_pot.urdf'),
         basePosition=(.65, 0.3, -.3),
         baseOrientation=(0, 0, 0.707107, 0.707107),
         globalScaling=0.8,

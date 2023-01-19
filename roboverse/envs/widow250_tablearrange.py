@@ -12,10 +12,10 @@ import numpy as np
 class Widow250TableArrangementEnv(Widow250Env):
 
     def __init__(self,
-                 possible_container_objects=['basket_pushable'],
+                 possible_container_objects=['steel_pot_pushable'],
                  possible_utensil_objects=['spoon'],
                  possible_pickplace_objects=['spam'],
-                 possible_push_objects=['can_pushable'],
+                 possible_push_objects=['tomato_can_pushable'],
 
                  container_position_low=(.72, 0.28, -.3),
                  container_position_high=(.48, 0.12, -.3),

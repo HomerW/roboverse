@@ -1,7 +1,8 @@
 import gym
 from roboverse.assets.shapenet_object_lists \
-    import GRASP_TRAIN_OBJECTS, GRASP_TEST_OBJECTS, OBJECT_SCALINGS, PICK_PLACE_TRAIN_OBJECTS, \
-    PICK_PLACE_TEST_OBJECTS, PUSH_TRAIN_OBJECTS, TRAIN_CONTAINERS, TEST_CONTAINERS, TRAIN_OBJECTS
+import GRASP_TRAIN_OBJECTS, GRASP_TEST_OBJECTS, OBJECT_SCALINGS, PICK_PLACE_TRAIN_OBJECTS, \
+PICK_PLACE_TEST_OBJECTS, PUSH_TRAIN_OBJECTS, TRAIN_CONTAINERS, TEST_CONTAINERS, TRAIN_OBJECTS, \
+CUBOID_OBJECTS, DIVERSE_PUSH_TRAIN_OBJECTS, POT_OBJECTS
 
 ENVIRONMENT_SPECS = (
     {
@@ -318,10 +319,40 @@ ENVIRONMENT_SPECS = (
             'reward_type': 'pick_place',
             'control_mode': 'discrete_gripper',
             'observation_img_dim': 128,
-            'possible_container_objects': ['basket_pushable'],
+            'possible_container_objects': ['pot_pushable'],
             'possible_utensil_objects': ['spoon'],
             'possible_pickplace_objects': ['spam'],
-            'possible_push_objects': ['can_pushable'],
+            'possible_push_objects': ['tomato_can_pushable'],
+            'num_objects': 4,
+            'load_tray': True,
+            'object_position_high': (.72, 0.32, -.3),
+            'object_position_low': (.48, 0.18, -.3),
+            'container_position_low': (.72, 0.33, -.3),
+            'container_position_high': (.48, 0.17, -.3),
+            'min_distance_between_objects': 0.05,
+            'min_distance_from_object': 0.05,
+            'place_success_height_threshold': -0.3,
+            'place_success_radius_threshold': 0.07,
+            'transpose_image': False,
+            'camera_distance': .37,
+            'ee_pos_high': (.77, 0.37, -.17),
+            'ee_pos_low': (.43, 0.12, -.34),
+            'random_ee_pose': False,
+            'num_sim_steps_reset': 200,
+            # 'show_place_target': True
+        }
+    },
+    {
+        'id': 'Widow250DiverseTableArrangement-v0',
+        'entry_point': 'roboverse.envs.widow250_tablearrange:Widow250TableArrangementEnv',
+        'kwargs': {
+            'reward_type': 'pick_place',
+            'control_mode': 'discrete_gripper',
+            'observation_img_dim': 128,
+            'possible_container_objects': list(POT_OBJECTS),
+            'possible_utensil_objects': list(set(TRAIN_OBJECTS + GRASP_TRAIN_OBJECTS + PICK_PLACE_TRAIN_OBJECTS)), 
+            'possible_pickplace_objects': list(set(TRAIN_OBJECTS + GRASP_TRAIN_OBJECTS + PICK_PLACE_TRAIN_OBJECTS + CUBOID_OBJECTS)),
+            'possible_push_objects': DIVERSE_PUSH_TRAIN_OBJECTS,
             'num_objects': 4,
             'load_tray': True,
             'object_position_high': (.72, 0.32, -.3),

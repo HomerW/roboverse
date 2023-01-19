@@ -385,6 +385,43 @@ PICK_PLACE_TEST_OBJECTS = [
     'elliptical_capsule',
 ]
 
+CUBOID_OBJECTS = [
+    'white_cuboid',
+    'black_cuboid',
+    'red_cuboid',
+    'blue_cuboid',
+    'green_cuboid',
+    'yellow_cuboid',
+    'cyan_cuboid',
+    'magenta_cuboid',
+]
+
+CAN_OBJECTS = [
+    'white_can_pushable',
+    'black_can_pushable',
+    'red_can_pushable',
+    'blue_can_pushable',
+    'green_can_pushable',
+    'yellow_can_pushable',
+    'cyan_can_pushable',
+    'magenta_can_pushable',
+    'tuna_fish_can_pushable',
+    'tuna_fish_can_tall_pushable',
+]
+
+POT_OBJECTS = [
+    'white_pot_pushable',
+    'black_pot_pushable',
+    'red_pot_pushable',
+    'blue_pot_pushable',
+    'green_pot_pushable',
+    'yellow_pot_pushable',
+    'cyan_pot_pushable',
+    'magenta_pot_pushable',
+]
+
+DIVERSE_PUSH_TRAIN_OBJECTS = list(CYLINDER_COLORS.keys()) + CAN_OBJECTS
+
 OBJECT_ORIENTATIONS = {
     'conic_cup': (0, 0, 1, 0),
     'ball': (0, 0, 1, 0),

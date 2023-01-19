@@ -327,8 +327,11 @@ class Push:
         ee_pos, ee_quat = bullet.get_link_state(
             self.env.robot_id, self.env.end_effector_index)
         ee_deg = bullet.quat_to_deg(ee_quat)
+        object_pos, _ = bullet.get_object_position(
+            self.env.objects[self.object_to_target])
+
         gripper_pickpoint_dist = np.linalg.norm(self.pick_point - ee_pos)
-        gripper_droppoint_dist = np.linalg.norm(self.drop_point - ee_pos)
+        obj_droppoint_dist_xy = np.linalg.norm(self.drop_point[:2] - object_pos[:2])
         wrist_pos = ee_deg[2]
         # make wrist angle range from 0 to 360 (neutral at 180)
         if wrist_pos < 0: 
@@ -352,7 +355,7 @@ class Push:
             action_angles = [0., 0., wrist_action]
             action_gripper = [0.0]
             self.near_object_try_counter += 1
-        elif (self.near_object_try_counter > self.near_object_max_tries or gripper_droppoint_dist > 0.02) and not self.target_reached:
+        elif obj_droppoint_dist_xy > 0.02 and not self.target_reached:
             # now need to move towards the target
             self.object_reached = True
             action_xyz = (self.drop_point - ee_pos) * self.xyz_action_scale
