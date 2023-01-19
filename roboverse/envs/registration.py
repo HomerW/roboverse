@@ -499,8 +499,8 @@ ENVIRONMENT_SPECS = (
 
                    'load_tray': False,
 
-                   'possible_objects': PICK_PLACE_TRAIN_OBJECTS,
-                   'possible_containers': TRAIN_CONTAINERS,
+                   'possible_objects': PICK_PLACE_TRAIN_OBJECTS[:4],
+                   'possible_containers': TRAIN_CONTAINERS[:2],
 
                    }
     },
