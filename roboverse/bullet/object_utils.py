@@ -58,6 +58,19 @@ def check_grasp(object_name,
 
     return success
 
+def check_displacement(initial_object_positions,
+                       object_id_map,
+                       displacement_threshold):
+    displaced = False
+    for k in object_id_map.keys():
+        assert k in initial_object_positions.keys()
+    
+        initial_obj_pos = initial_object_positions[k]
+        obj_pos, _ = get_object_position(object_id_map[k])
+        if np.linalg.norm(initial_obj_pos - obj_pos) > displacement_threshold:
+            displaced = True
+    
+    return displaced
 
 # TODO(avi) Need to clean unify these object position functions
 def generate_object_positions_single(

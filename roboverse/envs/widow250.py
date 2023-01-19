@@ -205,6 +205,10 @@ class Widow250Env(gym.Env, Serializable):
 
         self.is_gripper_open = True  # TODO(avi): Clean this up
 
+        self.initial_object_position = dict()
+        for object_name, object_id in self.objects.items():
+            self.initial_object_position[object_name] = bullet.get_object_position(object_id)[0]
+
         return self.get_observation()
 
     def step(self, action):
@@ -335,6 +339,19 @@ class Widow250Env(gym.Env, Serializable):
             self.target_object, self.objects, self.robot_id,
             self.end_effector_index, self.grasp_success_height_threshold,
             self.grasp_success_object_gripper_threshold)
+
+        info['object_tapped'] = object_utils.check_displacement(
+            self.initial_object_position,
+            self.objects,
+            0.01
+        )
+
+        info['object_moved'] = object_utils.check_displacement(
+            self.initial_object_position,
+            self.objects,
+            0.05
+        )
+
         return info
 
     def render_obs(self):
