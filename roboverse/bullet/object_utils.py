@@ -91,8 +91,8 @@ def generate_object_positions_table_arrangement(
     max_attempts = MAX_ATTEMPTS_TO_GENERATE_OBJECT_POSITIONS
     i = 0
     pickplace_object_in_pot = np.random.uniform() < 0.5
-    ## Debugging
-    pickplace_object_in_pot = True
+    # ## Debugging
+    # pickplace_object_in_pot = True
     while not valid:
         target_position = np.random.uniform(
             low=target_position_low, high=target_position_high)
@@ -106,8 +106,8 @@ def generate_object_positions_table_arrangement(
             object_positions['pickplace'] = object_positions['container'] 
             target_object = np.random.choice(possible_target_objects)
 
-            ## Debugging
-            target_object = 'push'
+            # ## Debugging
+            # target_object = 'container'
         else:
             possible_target_objects = ['container', 'utensil', 'push', 'pickplace']
             for object in possible_target_objects:
@@ -116,8 +116,8 @@ def generate_object_positions_table_arrangement(
                 object_positions[object] = object_position
             target_object = np.random.choice(possible_target_objects)
 
-            ## Debugging
-            target_object = 'push'
+            # ## Debugging
+            # target_object = 'container'
 
             # If pickplace object not in container, target position will be in container
             if target_object == 'pickplace':
@@ -541,9 +541,30 @@ BULLET_OBJECT_SPECS = dict(
         baseOrientation=(0, 0, 0.707107, 0.707107),
         globalScaling=0.25, 
     ),
-    coke_can_pushable=dict(
+    pepsi_can_pushable=dict(
         fileName=os.path.join(
-            BASE_ASSET_PATH, 'can/coke_can/coke_can.urdf'),
+            BASE_ASSET_PATH, 'can/pepsi_can/pepsi_can.urdf'),
+        basePosition=(.6, 0.25, -.3),
+        baseOrientation=(0, 0, 0.707107, 0.707107),
+        globalScaling=0.25, 
+    ),
+    mountain_dew_can_pushable=dict(
+        fileName=os.path.join(
+            BASE_ASSET_PATH, 'can/mountain_dew_can/mountain_dew_can.urdf'),
+        basePosition=(.6, 0.25, -.3),
+        baseOrientation=(0, 0, 0.707107, 0.707107),
+        globalScaling=0.25, 
+    ),
+    xylitol_can_pushable=dict(
+        fileName=os.path.join(
+            BASE_ASSET_PATH, 'can/xylitol_can/xylitol_can.urdf'),
+        basePosition=(.6, 0.25, -.3),
+        baseOrientation=(0, 0, 0.707107, 0.707107),
+        globalScaling=0.25, 
+    ),
+    decaf_can_pushable=dict(
+        fileName=os.path.join(
+            BASE_ASSET_PATH, 'can/decaf_can/decaf_can.urdf'),
         basePosition=(.6, 0.25, -.3),
         baseOrientation=(0, 0, 0.707107, 0.707107),
         globalScaling=0.25, 
@@ -608,6 +629,30 @@ BULLET_OBJECT_SPECS = dict(
     steel_pot_pushable=dict(
         fileName=os.path.join(
             BASE_ASSET_PATH, 'pot/steel_pot.urdf'),
+        basePosition=(.65, 0.3, -.3),
+        baseOrientation=(0, 0, 0.707107, 0.707107),
+        globalScaling=0.8,
+        useFixedBase=0,
+    ),
+    yellowbowl_pushable=dict(
+        fileName=os.path.join(
+            BASE_ASSET_PATH, 'dishware/yellowbowl/yellowbowl.urdf'),
+        basePosition=(.65, 0.3, -.3),
+        baseOrientation=(0, 0, 0.707107, 0.707107),
+        globalScaling=0.8,
+        useFixedBase=0,
+    ),
+    turqoisebowl_pushable=dict(
+        fileName=os.path.join(
+            BASE_ASSET_PATH, 'dishware/turqoisebowl/turqoisebowl.urdf'),
+        basePosition=(.65, 0.3, -.3),
+        baseOrientation=(0, 0, 0.707107, 0.707107),
+        globalScaling=0.8,
+        useFixedBase=0,
+    ),
+    ramekinbowl_pushable=dict(
+        fileName=os.path.join(
+            BASE_ASSET_PATH, 'dishware/ramekinbowl/ramekinbowl.urdf'),
         basePosition=(.65, 0.3, -.3),
         baseOrientation=(0, 0, 0.707107, 0.707107),
         globalScaling=0.8,

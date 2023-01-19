@@ -407,9 +407,16 @@ CAN_OBJECTS = [
     'magenta_can_pushable',
     'tuna_fish_can_pushable',
     'tuna_fish_can_tall_pushable',
+    'pepsi_can_pushable',
+    'mountain_dew_can_pushable',
+    'xylitol_can_pushable',
+    'decaf_can_pushable',
 ]
 
-POT_OBJECTS = [
+TRAIN_CONTAINER_OBJECTS = [
+    'yellowbowl_pushable',
+    'turqoisebowl_pushable',
+    'ramekinbowl_pushable',
     'white_pot_pushable',
     'black_pot_pushable',
     'red_pot_pushable',

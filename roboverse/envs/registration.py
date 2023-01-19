@@ -2,7 +2,7 @@ import gym
 from roboverse.assets.shapenet_object_lists \
 import GRASP_TRAIN_OBJECTS, GRASP_TEST_OBJECTS, OBJECT_SCALINGS, PICK_PLACE_TRAIN_OBJECTS, \
 PICK_PLACE_TEST_OBJECTS, PUSH_TRAIN_OBJECTS, TRAIN_CONTAINERS, TEST_CONTAINERS, TRAIN_OBJECTS, \
-CUBOID_OBJECTS, DIVERSE_PUSH_TRAIN_OBJECTS, POT_OBJECTS
+CUBOID_OBJECTS, DIVERSE_PUSH_TRAIN_OBJECTS, TRAIN_CONTAINER_OBJECTS
 
 ENVIRONMENT_SPECS = (
     {
@@ -319,7 +319,7 @@ ENVIRONMENT_SPECS = (
             'reward_type': 'pick_place',
             'control_mode': 'discrete_gripper',
             'observation_img_dim': 128,
-            'possible_container_objects': ['pot_pushable'],
+            'possible_container_objects': ['steel_pot_pushable'],
             'possible_utensil_objects': ['spoon'],
             'possible_pickplace_objects': ['spam'],
             'possible_push_objects': ['tomato_can_pushable'],
@@ -349,10 +349,10 @@ ENVIRONMENT_SPECS = (
             'reward_type': 'pick_place',
             'control_mode': 'discrete_gripper',
             'observation_img_dim': 128,
-            'possible_container_objects': list(POT_OBJECTS),
+            'possible_container_objects': list(TRAIN_CONTAINER_OBJECTS),
             'possible_utensil_objects': list(set(TRAIN_OBJECTS + GRASP_TRAIN_OBJECTS + PICK_PLACE_TRAIN_OBJECTS)), 
             'possible_pickplace_objects': list(set(TRAIN_OBJECTS + GRASP_TRAIN_OBJECTS + PICK_PLACE_TRAIN_OBJECTS + CUBOID_OBJECTS)),
-            'possible_push_objects': DIVERSE_PUSH_TRAIN_OBJECTS,
+            'possible_push_objects': list(DIVERSE_PUSH_TRAIN_OBJECTS),
             'num_objects': 4,
             'load_tray': True,
             'object_position_high': (.72, 0.32, -.3),
