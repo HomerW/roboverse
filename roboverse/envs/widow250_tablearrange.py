@@ -166,6 +166,11 @@ class Widow250TableArrangementEnv(Widow250Env):
             self.object_orientations[object_name] = OBJECT_ORIENTATIONS.get(object_name, (0, 0, 1, 0))
             self.object_scales[object_name] = OBJECT_SCALINGS.get(object_name, 1.0)
         self.objects_loaded = True
+
+        self.initial_object_position = dict()
+        for object_name, object_id in self.objects.items():
+            self.initial_object_position[object_name] = bullet.get_object_position(object_id)[0]
+
         return super().reset(**kwargs)
 
     def get_reward(self, info):
@@ -204,5 +209,17 @@ class Widow250TableArrangementEnv(Widow250Env):
         info['initial_positions'] = original_object_positions
         info['initial_quats'] = original_object_quats
         info['target_position'] = self.container_position
+
+        info['object_tapped'] = object_utils.check_displacement(
+            self.initial_object_position,
+            self.objects,
+            0.01
+        )
+
+        info['object_moved'] = object_utils.check_displacement(
+            self.initial_object_position,
+            self.objects,
+            0.05
+        )
 
         return info
