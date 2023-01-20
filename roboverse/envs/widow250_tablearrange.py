@@ -32,6 +32,13 @@ class Widow250TableArrangementEnv(Widow250Env):
         self.possible_pickplace_objects = possible_pickplace_objects
         self.possible_push_objects = possible_push_objects
         self.objects_loaded = False
+        ## Important: Order Matters
+        self.object_types = [
+            'push',
+            'container',
+            'utensil',
+            'pickplace',
+        ]
 
         self.container_position_low = container_position_low
         self.container_position_high = container_position_high
@@ -46,7 +53,7 @@ class Widow250TableArrangementEnv(Widow250Env):
 
         assert self.num_objects == 4
 
-    def _load_meshes(self, original_object_positions=None, target_position=None, **kwargs):
+    def _load_meshes(self, original_object_positions=None, original_object_quats=None, target_position=None, **kwargs):
         self.table_id = objects.table_centered()
         self.robot_id = objects.widow250()
         self.wall_id = objects.back_wall()
@@ -64,7 +71,7 @@ class Widow250TableArrangementEnv(Widow250Env):
         """
         assert self.container_position_low[2] == self.object_position_low[2]
 
-        if original_object_positions is None or target_position is None:
+        if original_object_positions is None or original_object_quats is None or target_position is None:
             target_object, self.container_position, original_object_positions = \
                 object_utils.generate_object_positions_table_arrangement(
                     self.object_position_low, self.object_position_high,
@@ -74,7 +81,6 @@ class Widow250TableArrangementEnv(Widow250Env):
                 )
 
             target_object_dict = {
-                ## Important: Same order
                 'push': self.push_object_name,
                 'container': self.container_object_name,
                 'utensil': self.utensil_object_name,
@@ -83,15 +89,22 @@ class Widow250TableArrangementEnv(Widow250Env):
             self.target_object = target_object_dict[target_object]
 
             self.original_object_positions = [
-                ## Important: Same order
-                original_object_positions['push'],
-                original_object_positions['container'],
-                original_object_positions['utensil'],
-                original_object_positions['pickplace'],
+                original_object_positions[object_type]
+                for object_type in self.object_types
             ]
+
+            self.original_object_quats = []
+            for object_type in self.object_types:
+                object_name = target_object_dict[object_type]
+                default_object_quat = self.object_orientations[object_name]
+                object_deg = bullet.quat_to_deg(default_object_quat)
+                object_deg[2] = np.random.uniform(low=0, high=360)
+                object_quat = bullet.deg_to_quat(object_deg)
+                self.original_object_quats.append(object_quat)
         else:
             self.container_position = target_position
             self.original_object_positions = original_object_positions
+            self.original_object_quats = original_object_quats
 
         # TODO(avi) Need to clean up
         self.container_position[-1] = self.container_position_z
@@ -104,20 +117,11 @@ class Widow250TableArrangementEnv(Widow250Env):
                               basePosition=self.container_position)
         bullet.step_simulation(self.num_sim_steps_reset)
         
-        for object_name, object_position in zip(
-        [
-            ## Important: Same order
-            self.push_object_name,
-            self.container_object_name,
-            self.utensil_object_name,
-            self.pickplace_object_name,
-        ],
-        self.original_object_positions
+        for object_name, object_position, object_quat in zip(
+            self.object_names,
+            self.original_object_positions,
+            self.original_object_quats,
         ):
-            default_object_quat = self.object_orientations[object_name]
-            object_deg = bullet.quat_to_deg(default_object_quat)
-            object_deg[2] = np.random.uniform(low=0, high=360)
-            object_quat = bullet.deg_to_quat(object_deg)
             self.objects[object_name] = object_utils.load_object(
                 object_name,
                 object_position,
@@ -127,18 +131,11 @@ class Widow250TableArrangementEnv(Widow250Env):
 
     def reset(
         self, 
-        container_object_name=None, 
-        utensil_object_name=None, 
-        pickplace_object_name=None, 
-        push_object_name=None, 
+        object_names=None, 
         target_object=None,
         **kwargs
     ):
-        if container_object_name is None \
-            or utensil_object_name is None \
-            or pickplace_object_name is None \
-            or push_object_name is None \
-            or target_object is None:
+        if object_names is None or target_object is None:
             self.container_object_name = str(np.random.choice(self.possible_container_objects))
             self.utensil_object_name = str(np.random.choice(self.possible_utensil_objects))
             self.pickplace_object_name = str(np.random.choice(self.possible_pickplace_objects))
@@ -146,23 +143,21 @@ class Widow250TableArrangementEnv(Widow250Env):
             ## Overwritten in _load_meshes
             self.target_object = None
         else:
-            assert target_object in [
-                container_object_name, 
-                utensil_object_name, 
-                pickplace_object_name, 
-                push_object_name
-            ]
-            self.container_object_name = container_object_name
-            self.utensil_object_name = utensil_object_name
-            self.pickplace_object_name = pickplace_object_name
-            self.push_object_name = push_object_name
+            assert target_object in object_names
+            ## Important: Order Matters
+            self.push_object_name = object_names[0]
+            self.container_object_name = object_names[1]
+            self.utensil_object_name = object_names[2]
+            self.pickplace_object_name = object_names[3]
+
             self.target_object = target_object
         
+        ## Important: Order Matters
         self.object_names = [
+            self.push_object_name,
             self.container_object_name, 
             self.utensil_object_name, 
             self.pickplace_object_name, 
-            self.push_object_name
         ]
         
         self.object_scales = dict()
@@ -198,13 +193,16 @@ class Widow250TableArrangementEnv(Widow250Env):
             self.place_success_radius_threshold)
     
         original_object_positions = list(self.original_object_positions)
+        original_object_quats = list(self.original_object_quats)
 
         info['container_object_name'] = self.container_object_name
         info['utensil_object_name'] = self.utensil_object_name
         info['pickplace_object_name'] = self.pickplace_object_name
         info['push_object_name'] = self.push_object_name
+        info['object_names'] = self.object_names
         info['target_object'] = self.target_object
         info['initial_positions'] = original_object_positions
+        info['initial_quats'] = original_object_quats
         info['target_position'] = self.container_position
 
         return info
