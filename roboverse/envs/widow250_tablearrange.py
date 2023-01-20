@@ -22,8 +22,8 @@ class Widow250TableArrangementEnv(Widow250Env):
                  container_position_z=-0.36,
                  min_distance_between_objects=0.07,
                  min_distance_from_object=0.0,
-                 place_success_height_threshold=-0.3,
-                 place_success_radius_threshold=0.07,
+                 place_success_height_threshold=-0.28,
+                 place_success_radius_threshold=0.05,
                  show_place_target=False,
                  **kwargs,
     ):
