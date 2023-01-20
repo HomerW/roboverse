@@ -1,19 +1,20 @@
 import numpy as np
 import time
-import os
-import os.path as osp
+import tensorflow as tf
 import roboverse
 from roboverse.policies import policies
 import argparse
 from tqdm import tqdm
-import h5py
 
 from roboverse.utils import get_timestamp
 
 EPSILON = 0.1
 
-# TODO(avi): Clean this up
-NFS_PATH = "/nfs/kun1/users/avi/imitation_datasets/"
+
+def tensor_feature(value):
+    return tf.train.Feature(
+        bytes_list=tf.train.BytesList(value=[tf.io.serialize_tensor(value).numpy()])
+    )
 
 
 def add_transition(
@@ -92,13 +93,9 @@ def collect_one_traj(env, policy, num_timesteps, noise, accept_trajectory_key):
 def main(args):
 
     timestamp = get_timestamp()
-    if osp.exists(NFS_PATH):
-        data_save_path = osp.join(NFS_PATH, args.save_directory)
-    else:
-        data_save_path = osp.join(__file__, "../..", "data", args.save_directory)
-    data_save_path = osp.abspath(data_save_path)
-    if not osp.exists(data_save_path):
-        os.makedirs(data_save_path)
+    data_save_path = args.save_directory
+    if not tf.io.gfile.exists(data_save_path):
+        tf.io.gfile.makedirs(data_save_path)
 
     env = roboverse.make(args.env_name, gui=args.gui, transpose_image=False)
 
@@ -142,27 +139,41 @@ def main(args):
     progress_bar.close()
     print("success rate: {}".format(num_success / (num_attempts)))
 
-    path = osp.join(
-        data_save_path, "scripted_{}_{}.hdf5".format(args.env_name, timestamp)
+    path = tf.io.gfile.join(
+        data_save_path, "scripted_{}_{}.tfrecord".format(args.env_name, timestamp)
     )
     print(path)
-    with h5py.File(path, "w") as f:
-        f["observations/images0"] = np.array([o["image"] for t in data for o in t["observations"]])
-        f["next_observations/images0"] = np.array([o["image"] for t in data for o in t["next_observations"]])
-        f["observations/state"] = np.array([o["state"] for t in data for o in t["observations"]])
-        f["next_observations/state"] = np.array([o["state"] for t in data for o in t["observations"]])
-        f["actions"] = np.array([a for t in data for a in t["actions"]], dtype=np.float32)
-        f["terminals"] = np.zeros(f["actions"].shape[0], dtype=np.bool_)
-        f["truncates"] = np.zeros(f["actions"].shape[0], dtype=np.bool_)
-        for key in data[0]['env_infos'][0]:
-            f[f"infos/{key}"] = [i[key] for t in data for i in t['env_infos']]
-        f["steps_remaining"] = np.zeros(f["actions"].shape[0], dtype=np.uint32)
-        end = 0
+
+    with tf.io.TFRecordWriter(path) as writer:
         for traj in data:
-            start = end
-            end += len(traj["actions"])
-            f["truncates"][end - 1] = True
-            f["steps_remaining"][start:end] = np.arange(end - start)[::-1]
+            truncates = np.zeros(len(traj["actions"]), dtype=np.bool_)
+            truncates[-1] = True
+            example = tf.train.Example(
+                features=tf.train.Features(
+                    feature={
+                        "observations/images0": tensor_feature(
+                            np.array([o["image"] for o in traj["observations"]], dtype=np.uint8)
+                        ),
+                        "observations/state": tensor_feature(
+                            np.array([o["state"] for o in traj["observations"]], dtype=np.float32)
+                        ),
+                        "next_observations/images0": tensor_feature(
+                            np.array([o["image"] for o in traj["next_observations"]], dtype=np.uint8)
+                        ),
+                        "next_observations/state": tensor_feature(
+                            np.array([o["state"] for o in traj["next_observations"]], dtype=np.float32)
+                        ),
+                        "actions": tensor_feature(
+                            np.array(traj["actions"], dtype=np.float32)
+                        ),
+                        "terminals": tensor_feature(
+                            np.zeros(len(traj["actions"]), dtype=np.bool_)
+                        ),
+                        "truncates": tensor_feature(truncates),
+                    }
+                )
+            )
+            writer.write(example.SerializeToString())
 
 
 if __name__ == "__main__":

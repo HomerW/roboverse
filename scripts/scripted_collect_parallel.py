@@ -10,7 +10,7 @@ from roboverse.utils import get_timestamp
 def get_data_save_directory(args):
     data_save_directory = args.data_save_directory
 
-    data_save_directory += '_{}'.format(args.env)
+    data_save_directory += '/{}'.format(args.env)
 
     if args.num_trajectories > 1000:
         data_save_directory += '_{}K'.format(int(args.num_trajectories/1000))
