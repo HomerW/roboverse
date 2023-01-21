@@ -6,6 +6,7 @@ import roboverse.bullet as bullet
 from roboverse.envs import objects
 from roboverse.bullet import object_utils, control
 from .multi_object import MultiObjectEnv
+from PIL import Image
 
 END_EFFECTOR_INDEX = 8
 RESET_JOINT_VALUES = [1.57, -0.6, -0.6, 0, -1.57, 0., 0., 0.036, -0.036]
@@ -31,6 +32,7 @@ class Widow250Env(gym.Env, Serializable):
                  observation_mode='pixels',
                  observation_img_dim=48,
                  transpose_image=True,
+                 antialias=True,
 
                  object_names=('beer_bottle', 'gatorade'),
                  num_objects=None,
@@ -73,6 +75,7 @@ class Widow250Env(gym.Env, Serializable):
         self.observation_mode = observation_mode
         self.observation_img_dim = observation_img_dim
         self.transpose_image = transpose_image
+        self.antialias = antialias
 
         self.num_sim_steps = num_sim_steps
         self.num_sim_steps_reset = num_sim_steps_reset
@@ -312,6 +315,14 @@ class Widow250Env(gym.Env, Serializable):
                     (ee_pos, ee_quat, gripper_state, gripper_binary_state)),
                 'image': image_observation
             }
+        elif self.observation_mode == 'robot_object_state':
+            object_aabbs = [control.get_object_aabb(self.objects[obj]) 
+                for obj in self.objects]
+            object_aabbs = np.concatenate([np.concatenate(aabb) for aabb in object_aabbs])
+            observation = {
+                'robot_object_state': np.concatenate(
+                    (ee_pos, ee_quat, gripper_state, gripper_binary_state, object_aabbs))
+            }
         else:
             raise NotImplementedError
 
@@ -355,11 +366,23 @@ class Widow250Env(gym.Env, Serializable):
         return info
 
     def render_obs(self):
-        img, depth, segmentation = bullet.render(
-            self.observation_img_dim, self.observation_img_dim,
-            self._view_matrix_obs, self._projection_matrix_obs, shadow=0)
+        if self.antialias:
+            render_dim = 2*self.observation_img_dim
+            img, depth, segmentation = bullet.render(
+               render_dim, render_dim,
+                self._view_matrix_obs, self._projection_matrix_obs, shadow=0)
+            img = Image.fromarray(np.uint8(img), 'RGB').resize(
+                [self.observation_img_dim, self.observation_img_dim], 
+                resample=Image.Resampling.LANCZOS)
+            img = np.array(img)
+        else:
+            img, depth, segmentation = bullet.render(
+                self.observation_img_dim, self.observation_img_dim,
+                self._view_matrix_obs, self._projection_matrix_obs, shadow=0)
+        
         if self.transpose_image:
             img = np.transpose(img, (2, 0, 1))
+        
         return img
 
     def _set_action_space(self):
@@ -388,6 +411,14 @@ class Widow250Env(gym.Env, Serializable):
                       'state': state_space,
                       'object_position': obj_pos_space,
                       'object_orientation': obj_ori_space}
+            self.observation_space = gym.spaces.Dict(spaces)
+        elif self.observation_mode == 'robot_object_state':
+            robot_state_dim = 10  # XYZ + QUAT + GRIPPER_STATE
+            obs_bound = 100
+            robot_object_state_dim = robot_state_dim + 6 * len(self.objects)
+            obs_high = np.ones(robot_object_state_dim) * obs_bound
+            robot_object_state_space = gym.spaces.Box(-obs_high, obs_high)
+            spaces = {'robot_object_state': robot_object_state_space}
             self.observation_space = gym.spaces.Dict(spaces)
         else:
             raise NotImplementedError

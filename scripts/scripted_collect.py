@@ -20,13 +20,14 @@ def tensor_feature(value):
 def add_transition(
     traj, observation, action, reward, info, agent_info, done, next_observation, img_dim
 ):
-    observation["image"] = np.reshape(
-        np.uint8(observation["image"] * 255.0), (img_dim, img_dim, 3)
-    )
+    if 'image' in observation:
+        observation["image"] = np.reshape(
+            np.uint8(observation["image"] * 255.0), (img_dim, img_dim, 3)
+        )
+        next_observation["image"] = np.reshape(
+            np.uint8(next_observation["image"] * 255.0), (img_dim, img_dim, 3)
+        )
     traj["observations"].append(observation)
-    next_observation["image"] = np.reshape(
-        np.uint8(next_observation["image"] * 255.0), (img_dim, img_dim, 3)
-    )
     traj["next_observations"].append(next_observation)
     traj["actions"].append(action)
     traj["rewards"].append(reward)
