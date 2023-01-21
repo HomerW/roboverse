@@ -149,6 +149,9 @@ def main(args):
         for traj in data:
             truncates = np.zeros(len(traj["actions"]), dtype=np.bool_)
             truncates[-1] = True
+            steps_existing = np.arange(len(traj["actions"]), dtype=np.int32)
+            steps_remaining = steps_existing[::-1]
+
             example = tf.train.Example(
                 features=tf.train.Features(
                     feature={
@@ -171,6 +174,8 @@ def main(args):
                             np.zeros(len(traj["actions"]), dtype=np.bool_)
                         ),
                         "truncates": tensor_feature(truncates),
+                        "steps_existing": tensor_feature(steps_existing),
+                        "steps_remaining": tensor_feature(steps_remaining),
                     }
                 )
             )
