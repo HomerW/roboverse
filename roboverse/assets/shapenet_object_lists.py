@@ -345,6 +345,11 @@ OBJECT_SCALINGS = {
     'elliptical_capsule': 0.6,
     'aero_cylinder': 0.5,
     'grill_trash_can': 0.5,
+
+    'red_cuboid': 0.8,
+    'green_cuboid': 0.8,
+    'blue_cuboid': 0.8,
+    'duck': 0.6,
 }
 
 TEST_OBJECTS = [

@@ -499,8 +499,8 @@ ENVIRONMENT_SPECS = (
 
                    'load_tray': False,
 
-                   'possible_objects': PICK_PLACE_TRAIN_OBJECTS[:4],
-                   'possible_containers': TRAIN_CONTAINERS[:2],
+                   'possible_objects': ['red_cuboid', 'green_cuboid', 'blue_cuboid', 'duck'],
+                   'possible_containers': ['plate', 'bowl_small', 'tray'],
 
                    }
     },

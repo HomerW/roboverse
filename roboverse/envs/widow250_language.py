@@ -123,12 +123,12 @@ class LanguageTask:
             bullet.step_simulation(env.num_sim_steps_reset)
 
         for object_name, object_position in self.object_pos.items():
-            object_quat = OBJECT_ORIENTATIONS[object_name]
+            object_quat = OBJECT_ORIENTATIONS.get(object_name, (0, 0, 1, 0))
             env.objects[object_name] = object_utils.load_object(
                 object_name,
                 object_position,
                 object_quat=object_quat,
-                scale=OBJECT_SCALINGS[object_name])
+                scale=OBJECT_SCALINGS.get(object_name, 0.6))
             bullet.step_simulation(env.num_sim_steps_reset)
 
         env.container_position = self.goal_pos
