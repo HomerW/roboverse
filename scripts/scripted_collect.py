@@ -92,7 +92,6 @@ def collect_one_traj(env, policy, num_timesteps, noise, accept_trajectory_key):
 
 
 def main(args):
-
     timestamp = get_timestamp()
     data_save_path = args.save_directory
     if not tf.io.gfile.exists(data_save_path):
