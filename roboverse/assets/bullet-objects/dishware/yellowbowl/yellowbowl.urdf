@@ -1,0 +1,137 @@
+<?xml version="1.0" ?>
+<robot name="textured">
+  <link name="base_link">
+    <contact>
+      <lateral_friction value="1.0"/>
+      <inertia_scaling value="3.0"/>
+    </contact>
+    <inertial>
+      <origin rpy="0 0 0" xyz="-0.01 0 0.02"/>
+       <mass value=".1"/>
+       <inertia ixx="1" ixy="0" ixz="0" iyy="1" iyz="0" izz="1"/>
+    </inertial>
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="model.obj" scale=".8 .8 .87"/>
+      </geometry>
+      <material name="white">
+        <color rgba="1 1 1 1"/>
+      </material>
+    </visual>
+    <!-- <visual> -->
+    <!--   <origin rpy="0 0 0" xyz="0 0 0"/> -->
+    <!--   <geometry> -->
+    <!--     <cylinder length="0.07" radius="0.06"/> -->
+    <!--   </geometry> -->
+    <!-- </visual> -->
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="collision_model/model_vhacd_0_of_18.obj" scale=".8 .8 .87"/>
+      </geometry>
+    </collision>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="collision_model/model_vhacd_1_of_18.obj" scale=".8 .8 .87"/>
+      </geometry>
+    </collision>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="collision_model/model_vhacd_2_of_18.obj" scale=".8 .8 .87"/>
+      </geometry>
+    </collision>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="collision_model/model_vhacd_3_of_18.obj" scale=".8 .8 .87"/>
+      </geometry>
+    </collision>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="collision_model/model_vhacd_4_of_18.obj" scale=".8 .8 .87"/>
+      </geometry>
+    </collision>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="collision_model/model_vhacd_5_of_18.obj" scale=".8 .8 .87"/>
+      </geometry>
+    </collision>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="collision_model/model_vhacd_6_of_18.obj" scale=".8 .8 .87"/>
+      </geometry>
+    </collision>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="collision_model/model_vhacd_7_of_18.obj" scale=".8 .8 .87"/>
+      </geometry>
+    </collision>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="collision_model/model_vhacd_8_of_18.obj" scale=".8 .8 .87"/>
+      </geometry>
+    </collision>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="collision_model/model_vhacd_9_of_18.obj" scale=".8 .8 .87"/>
+      </geometry>
+    </collision>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="collision_model/model_vhacd_10_of_18.obj" scale=".8 .8 .87"/>
+      </geometry>
+    </collision>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="collision_model/model_vhacd_11_of_18.obj" scale=".8 .8 .87"/>
+      </geometry>
+    </collision>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="collision_model/model_vhacd_12_of_18.obj" scale=".8 .8 .87"/>
+      </geometry>
+    </collision>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="collision_model/model_vhacd_13_of_18.obj" scale=".8 .8 .87"/>
+      </geometry>
+    </collision>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="collision_model/model_vhacd_14_of_18.obj" scale=".8 .8 .87"/>
+      </geometry>
+    </collision>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="collision_model/model_vhacd_15_of_18.obj" scale=".8 .8 .87"/>
+      </geometry>
+    </collision>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="collision_model/model_vhacd_16_of_18.obj" scale=".8 .8 .87"/>
+      </geometry>
+    </collision>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="collision_model/model_vhacd_17_of_18.obj" scale=".8 .8 .87"/>
+      </geometry>
+    </collision>
+  </link>
+</robot>

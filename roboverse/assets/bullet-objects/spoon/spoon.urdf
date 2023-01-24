@@ -1,0 +1,49 @@
+<?xml version="1.0" ?>
+<robot name="spoon.urdf">
+  <material name="silver">
+    <color rgba=".75 .75 .75 1"/>
+  </material>
+  <material name="lightblue">
+    <color rgba=".153 .471 .898 1"/>
+  </material>
+  <link name="spoon">
+    <contact>
+      <lateral_friction value="1.0"/>
+      <rolling_friction value="0.0"/>
+      <contact_cfm value="0.0"/>
+      <contact_erp value="1.0"/>
+    </contact>
+    <inertial>
+      <origin rpy="0 0 0" xyz="0.0 0.02 0.0"/>
+       <mass value=".2"/>
+       <inertia ixx="1" ixy="0" ixz="0" iyy="1" iyz="0" izz="1"/>
+    </inertial>
+    <visual>
+      <origin rpy="0 0 0" xyz="0.0 0 0"/>
+      <geometry>
+        <mesh filename="oil_tanker.obj" scale=".1 .1 .1"/>
+      </geometry>
+      <material name="lightblue"/>
+    </visual>
+    <visual>
+      <origin rpy="1.57 1.57 -1.57" xyz="0.0 0.0 0.07"/>
+      <geometry>
+        <mesh filename="spoon.obj" scale=".00006 .00006 .00006"/>
+      </geometry>
+      <material name="silver"/>
+    </visual>
+    <collision>
+      <origin rpy="0 0 0" xyz="0.0 0 0"/>
+      <geometry>
+        <mesh filename="oil_tanker.obj" scale=".1 .1 .1"/>
+      </geometry>
+    </collision>
+    <collision>
+      <origin rpy="1.57 1.57 -1.57" xyz="0.0 0.0 0.07"/>
+      <geometry>
+        <mesh filename="spoon.obj" scale=".00006 .00006 .00006"/>
+      </geometry>
+    </collision>
+  </link>
+</robot>
+

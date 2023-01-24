@@ -1,0 +1,184 @@
+<?xml version="1.0" ?>
+
+<robot name="model">
+
+  <material name="color">
+    <color rgba="0.46 0.28 0.68 1.00"/>
+  </material>
+
+  <link name="base_link">
+
+    <contact>
+      <lateral_friction value="1.0"/>
+      <rolling_friction value="0.001"/>
+      <spinning_friction value="0.001"/>
+      <inertia_scaling value="1.0"/>
+    </contact>
+
+    <inertial>
+      <origin rpy="0 0 0" xyz="1.90396e-05 4.80948e-05 0.0187212"/>
+       <mass value="0.1"/>
+       <inertia ixx="1" ixy="0" ixz="0" iyy="1" iyz="0" izz="1"/>
+    </inertial>
+
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="model_vhacd_0_of_12.obj" scale="1 1 1"/>
+      </geometry>
+      <material name="color"/>
+    </visual>
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="model_vhacd_1_of_12.obj" scale="1 1 1"/>
+      </geometry>
+      <material name="color"/>
+    </visual>
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="model_vhacd_2_of_12.obj" scale="1 1 1"/>
+      </geometry>
+      <material name="color"/>
+    </visual>
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="model_vhacd_3_of_12.obj" scale="1 1 1"/>
+      </geometry>
+      <material name="color"/>
+    </visual>
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="model_vhacd_4_of_12.obj" scale="1 1 1"/>
+      </geometry>
+      <material name="color"/>
+    </visual>
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="model_vhacd_5_of_12.obj" scale="1 1 1"/>
+      </geometry>
+      <material name="color"/>
+    </visual>
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="model_vhacd_6_of_12.obj" scale="1 1 1"/>
+      </geometry>
+      <material name="color"/>
+    </visual>
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="model_vhacd_7_of_12.obj" scale="1 1 1"/>
+      </geometry>
+      <material name="color"/>
+    </visual>
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="model_vhacd_8_of_12.obj" scale="1 1 1"/>
+      </geometry>
+      <material name="color"/>
+    </visual>
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="model_vhacd_9_of_12.obj" scale="1 1 1"/>
+      </geometry>
+      <material name="color"/>
+    </visual>
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="model_vhacd_10_of_12.obj" scale="1 1 1"/>
+      </geometry>
+      <material name="color"/>
+    </visual>
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="model_vhacd_11_of_12.obj" scale="1 1 1"/>
+      </geometry>
+      <material name="color"/>
+    </visual>
+
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="model_vhacd_0_of_12.obj" scale="1 1 1"/>
+      </geometry>
+    </collision>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="model_vhacd_1_of_12.obj" scale="1 1 1"/>
+      </geometry>
+    </collision>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="model_vhacd_2_of_12.obj" scale="1 1 1"/>
+      </geometry>
+    </collision>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="model_vhacd_3_of_12.obj" scale="1 1 1"/>
+      </geometry>
+    </collision>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="model_vhacd_4_of_12.obj" scale="1 1 1"/>
+      </geometry>
+    </collision>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="model_vhacd_5_of_12.obj" scale="1 1 1"/>
+      </geometry>
+    </collision>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="model_vhacd_6_of_12.obj" scale="1 1 1"/>
+      </geometry>
+    </collision>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="model_vhacd_7_of_12.obj" scale="1 1 1"/>
+      </geometry>
+    </collision>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="model_vhacd_8_of_12.obj" scale="1 1 1"/>
+      </geometry>
+    </collision>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="model_vhacd_9_of_12.obj" scale="1 1 1"/>
+      </geometry>
+    </collision>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="model_vhacd_10_of_12.obj" scale="1 1 1"/>
+      </geometry>
+    </collision>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="model_vhacd_11_of_12.obj" scale="1 1 1"/>
+      </geometry>
+    </collision>
+
+  </link>
+
+</robot>
