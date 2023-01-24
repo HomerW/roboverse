@@ -148,6 +148,11 @@ def main(args):
         for traj in data:
             truncates = np.zeros(len(traj["actions"]), dtype=np.bool_)
             truncates[-1] = True
+
+            infos = {}
+            for key in data[0]["env_infos"][0]:
+                infos[f"infos/{key}"] = tensor_feature(np.array([i[key] for i in traj["env_infos"]]))
+
             example = tf.train.Example(
                 features=tf.train.Features(
                     feature={
@@ -170,6 +175,7 @@ def main(args):
                             np.zeros(len(traj["actions"]), dtype=np.bool_)
                         ),
                         "truncates": tensor_feature(truncates),
+                        **infos
                     }
                 )
             )
