@@ -1,0 +1,39 @@
+model {
+  file: "model.sdf"
+}
+name: "Don_Franciscos_Gourmet_Coffee_Medium_Decaf_100_Colombian_12_oz_340_g"
+description: "Don Francisco\'s Gourmet Coffee, Medium, Decaf, 100% Colombian - 12 oz (340 g)"
+version: 1
+authors {
+  name: "Google"
+  email: "scanned-objects@google.com"
+}
+legal {
+  copyright: "Copyright 2020 Google LLC."
+  license: "Creative Commons Attribution 4.0 International"
+}
+annotations {
+  key: "brand"
+  value: "Sony"
+}
+annotations {
+  key: "gtin"
+  value: "072323011186"
+}
+annotations {
+  key: "mpn"
+  value: "72323011186"
+}
+annotations {
+  key: "sku"
+  value: "Test Item 782"
+}
+compatibilities {
+  name: "Gazebo"
+  version {
+    major: 11
+  }
+}
+categories {
+  first: "Bottles and Cans and Cups"
+}
