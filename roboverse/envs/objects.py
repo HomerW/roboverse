@@ -2,6 +2,7 @@ import pybullet_data
 import pybullet as p
 import os
 import roboverse.bullet as bullet
+import random
 
 CUR_PATH = os.path.dirname(os.path.realpath(__file__))
 ASSET_PATH = os.path.join(CUR_PATH, '../assets')
@@ -12,6 +13,25 @@ NOTE: Use this file only for core objects, add others to bullet/object_utils.py
 This file will likely be deprecated in the future.
 """
 
+TABLE_COLORS = [(1, 0, 0, 1),(0, 0, 1, 1),(0, 1, 0, 1),(1, 1, 0, 1),(0, 1, 1, 1),(1, 0, 1, 1),(0.5, 0.5, 0.5, 1),(0.5, 0, 0, 1)]
+
+# def load_color_table():
+#     collisionid = p.createCollisionShape(shapeType=p.GEOM_BOX, halfExtents=[1, 1, 1])
+#     visualid = p.createVisualShape(
+#         shapeType=p.GEOM_BOX,
+#         rgbaColor=random.choice(TABLE_COLORS))
+#     body = p.createMultiBody(0.05, collisionid, visualid)
+#     # p.resetBasePositionAndOrientation(body, [.75, -.2, -1], [0, 0, 0.707107, 0.707107])
+#     # p.changeDynamics(body, -1, lateralFriction=1.0)
+#     return body
+
+# def load_back_wall():
+#     p.setAdditionalSearchPath(pybullet_data.getDataPath())
+#     table_id = p.loadURDF('table/table.urdf',
+#                           basePosition=[.75, -.2, -1],
+#                           baseOrientation=[0, 0, 0.707107, 0.707107],
+#                           globalScaling=1.0)
+#     return table_id
 
 def table():
     p.setAdditionalSearchPath(pybullet_data.getDataPath())
@@ -66,11 +86,11 @@ def widow250():
     return widow250_id
 
 
-def back_wall():
-    wall_path = os.path.join(ASSET_PATH,
-                            'bullet-objects/wall/back_wall.urdf')
-    wall_id = p.loadURDF(wall_path,
-                        basePosition=(.6, 0.25, -.3),
-                        baseOrientation=(0, 0, 0.707107, 0.707107),
-                        globalScaling=0.25)
-    return wall_id
+# def back_wall():
+#     wall_path = os.path.join(ASSET_PATH,
+#                             'bullet-objects/wall/back_wall.urdf')
+#     wall_id = p.loadURDF(wall_path,
+#                         basePosition=(.6, 0.25, -.3),
+#                         baseOrientation=(0, 0, 0.707107, 0.707107),
+#                         globalScaling=0.25)
+#     return wall_id

@@ -209,6 +209,35 @@ ENVIRONMENT_SPECS = (
         }
     },
     {
+        'id': 'Widow250AffordanceTraining-v0',
+        'entry_point': 'roboverse.envs.widow250_pickplace:Widow250PickPlacePositionMultiObjectEnv',
+        'kwargs': {
+            'reward_type': 'pick_place',
+            'control_mode': 'discrete_gripper',
+            'observation_img_dim': 128,
+            'possible_objects': list(set(TRAIN_OBJECTS + GRASP_TRAIN_OBJECTS + PICK_PLACE_TRAIN_OBJECTS)),
+            'num_objects': 4,
+            'vary_num_objects_range': (1, 4),
+            'load_tray': False,
+            'object_position_high': (.72, 0.33, -.3),
+            'object_position_low': (.48, 0.17, -.3),
+            'container_position_low': (.72, 0.33, -.3),
+            'container_position_high': (.48, 0.17, -.3),
+            'min_distance_between_objects': 0.0,
+            # 'min_distance_from_object': 0.0,
+            'random_object_pose': True,
+            'transpose_image': False,
+            'camera_distance': 0.28,
+            'ee_pos_high': (.77, 0.37, -.17),
+            'ee_pos_low': (.43, 0.12, -.34),
+            'random_ee_pose': True,
+            'camera_yaw': 20,
+            'camera_pitch': -50,
+            'camera_target_pos': (0.62, 0.2, -0.33),
+            # 'show_place_target': True
+        }
+    },
+    {
         'id': 'Widow250DiversePickPlacePositionMultiObjectCluttered-v0',
         'entry_point': 'roboverse.envs.widow250_pickplace:Widow250PickPlacePositionMultiObjectEnv',
         'kwargs': {

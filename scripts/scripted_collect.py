@@ -107,7 +107,7 @@ def main(args):
         args.accept_trajectory_key in env.get_info().keys()
     ), f"""The accept trajectory key must be one of: {env.get_info().keys()}"""
     policy_class = policies[args.policy_name]
-    policy = policy_class(env)
+    policy = policy_class(env, random_neutral_pos=True)
     num_success = 0
     num_saved = 0
     num_attempts = 0

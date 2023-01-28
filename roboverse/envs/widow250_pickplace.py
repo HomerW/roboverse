@@ -156,6 +156,8 @@ class Widow250PickPlacePositionEnv(Widow250Env):
 
     def _load_meshes(self, original_object_positions=None, target_position=None, **kwargs):
         self.table_id = objects.table()
+        # self.table_id = objects.load_color_table()
+        # self.back_wall_id = objects.load_back_wall()
         self.robot_id = objects.widow250()
         self.objects = {}
 
@@ -189,6 +191,15 @@ class Widow250PickPlacePositionEnv(Widow250Env):
                                                 radius=self.place_success_radius_threshold)
             p.createMultiBody(baseVisualShapeIndex=visualShapeId,
                               basePosition=self.container_position)
+            # half_extents = (np.array(self.object_position_high) - np.array(self.object_position_low)) / 2
+            # center = np.array(self.object_position_low) + half_extents
+            # half_extents[2] = 0.001
+            # center[2] = -0.37
+            # visualShapeId = p.createVisualShape(shapeType=p.GEOM_BOX,
+            #                                     rgbaColor=[1, 1, 1, 1],
+            #                                     halfExtents=half_extents)
+            # p.createMultiBody(baseVisualShapeIndex=visualShapeId,
+            #                   basePosition=center)
         bullet.step_simulation(self.num_sim_steps_reset)
         for object_name, object_position in zip(self.object_names,
                                                 self.original_object_positions):
