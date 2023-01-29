@@ -151,6 +151,11 @@ def main(args):
             steps_existing = np.arange(len(traj["actions"]), dtype=np.int32)
             steps_remaining = steps_existing[::-1]
 
+
+            infos = {}
+            for key in data[0]["env_infos"][0]:
+                infos[f"infos/{key}"] = tensor_feature(np.array([i[key] for i in traj["env_infos"]]))
+
             example = tf.train.Example(
                 features=tf.train.Features(
                     feature={
@@ -175,6 +180,7 @@ def main(args):
                         "truncates": tensor_feature(truncates),
                         "steps_existing": tensor_feature(steps_existing),
                         "steps_remaining": tensor_feature(steps_remaining),
+                        **infos
                     }
                 )
             )
