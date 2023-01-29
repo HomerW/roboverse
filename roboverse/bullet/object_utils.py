@@ -338,7 +338,7 @@ BULLET_OBJECT_SPECS = dict(
         fileName=os.path.join(BASE_ASSET_PATH, 'pan/pan.urdf'),
         basePosition=(.65, 0.3, -.3),
         baseOrientation=(0, 0, 0.707107, 0.707107),
-        globalScaling=0.8,
+        globalScaling=1.8,
     ),
     drawer=dict(
         fileName=os.path.join(
@@ -736,6 +736,12 @@ BULLET_OBJECT_SPECS = dict(
         useFixedBase=0,
     ),
 )
+
+for obj in list(BULLET_OBJECT_SPECS):
+    if obj.endswith('pushable'):
+        BULLET_OBJECT_SPECS[obj.replace('_pushable', '')] = BULLET_OBJECT_SPECS[obj]
+    if 'cuboid' in obj:
+        BULLET_OBJECT_SPECS[obj.replace('cuboid', 'cube')] = BULLET_OBJECT_SPECS[obj]
 
 PROGRAMMATIC_OBJECT_SPECS = dict(
     visual=dict(

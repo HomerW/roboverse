@@ -31,6 +31,17 @@ CONTAINER_CONFIGS = {
         'place_success_radius_threshold': 0.04,
         'min_distance_from_object': 0.11,
     },
+    'pan': {
+        'container_position_low': (.50, 0.22, -.30),
+        'container_position_high': (.70, 0.26, -.30),
+        'container_position_default': (.50, 0.22, -.30),
+        'container_orientation': (0, 0, 0.707107, 0.707107),
+        'container_scale': 0.46,
+        'container_position_z': -0.37,
+        'place_success_height_threshold': -0.32,
+        'place_success_radius_threshold': 0.04,
+        'min_distance_from_object': 0.11,
+    },
     'cube_concave': {
         'container_name': 'cube_concave',
         'container_position_low': (.50, 0.22, -.30),
