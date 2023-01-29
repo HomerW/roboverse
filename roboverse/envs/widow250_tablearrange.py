@@ -71,7 +71,7 @@ class Widow250TableArrangementEnv(Widow250Env):
         """
         assert self.container_position_low[2] == self.object_position_low[2]
 
-        if original_object_positions is None or original_object_quats is None or target_position is None:
+        if original_object_positions is None and original_object_quats is None and target_position is None:
             target_object, self.container_position, original_object_positions = \
                 object_utils.generate_object_positions_table_arrangement(
                     self.object_position_low, self.object_position_high,
@@ -101,10 +101,12 @@ class Widow250TableArrangementEnv(Widow250Env):
                 object_deg[2] = np.random.uniform(low=0, high=360)
                 object_quat = bullet.deg_to_quat(object_deg)
                 self.original_object_quats.append(object_quat)
-        else:
+        elif original_object_positions is not None and original_object_quats is not None and target_position is not None:
             self.container_position = target_position
             self.original_object_positions = original_object_positions
             self.original_object_quats = original_object_quats
+        else:
+            raise ValueError(f"original_object_positions, original_object_quats, and target_position must all be None or all be not None")
 
         # TODO(avi) Need to clean up
         self.container_position[-1] = self.container_position_z

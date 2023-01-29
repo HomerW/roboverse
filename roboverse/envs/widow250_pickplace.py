@@ -154,7 +154,7 @@ class Widow250PickPlacePositionEnv(Widow250Env):
         self.random_object_pose = random_object_pose
         super(Widow250PickPlacePositionEnv, self).__init__(**kwargs)
 
-    def _load_meshes(self, original_object_positions=None, target_position=None, **kwargs):
+    def _load_meshes(self, original_object_positions=None, original_object_quats=None, target_position=None, **kwargs):
         self.table_id = objects.table()
         self.robot_id = objects.widow250()
         self.objects = {}
@@ -168,7 +168,7 @@ class Widow250PickPlacePositionEnv(Widow250Env):
         """
         assert self.container_position_low[2] == self.object_position_low[2]
 
-        if original_object_positions is None or target_position is None:
+        if original_object_positions is None and original_object_quats is None and target_position is None:
             self.container_position, self.original_object_positions = \
                 object_utils.generate_object_positions_v3(
                     self.num_objects, self.object_position_low, self.object_position_high,
@@ -176,9 +176,20 @@ class Widow250PickPlacePositionEnv(Widow250Env):
                     min_distance=self.min_distance_between_objects,
                     min_distance_target=self.min_distance_from_object
                 )
-        else:
+            
+            self.original_object_quats = []
+            for object_name in self.object_names:
+                if self.random_object_pose:
+                    object_quat = tuple(np.random.uniform(low=0, high=1, size=4))
+                else:
+                    object_quat = self.object_orientations[object_name]
+                self.original_object_quats.append(object_quat)
+        elif original_object_positions is not None and original_object_quats is not None and target_position is not None:
             self.container_position = target_position
             self.original_object_positions = original_object_positions
+            self.original_object_quats = original_object_quats
+        else:
+            raise ValueError(f"original_object_positions, original_object_quats, and target_position must all be None or all be not None")
 
         # TODO(avi) Need to clean up
         self.container_position[-1] = self.container_position_z
@@ -190,12 +201,11 @@ class Widow250PickPlacePositionEnv(Widow250Env):
             p.createMultiBody(baseVisualShapeIndex=visualShapeId,
                               basePosition=self.container_position)
         bullet.step_simulation(self.num_sim_steps_reset)
-        for object_name, object_position in zip(self.object_names,
-                                                self.original_object_positions):
-            if self.random_object_pose:
-                object_quat = tuple(np.random.uniform(low=0, high=1, size=4))
-            else:
-                object_quat = self.object_orientations[object_name]
+        for object_name, object_position, object_quat in zip(
+            self.object_names,
+            self.original_object_positions,
+            self.original_object_quats,
+        ):
             self.objects[object_name] = object_utils.load_object(
                 object_name,
                 object_position,
@@ -253,10 +263,16 @@ class Widow250PickPlacePositionEnv(Widow250Env):
             original_object_positions + \
             [-np.ones(3) for _ in range(MAX_OBJECTS - len(original_object_positions))]
         )
+        original_object_quats = list(self.original_object_quats)
+        original_object_quats = tuple(
+            original_object_quats + \
+            [-np.ones(4) for _ in range(MAX_OBJECTS - len(original_object_quats))]
+        )
 
         info['object_names'] = object_names
         info['target_object'] = self.target_object
         info['initial_positions'] = original_object_positions
+        info['initial_quats'] = original_object_quats
         info['target_position'] = self.container_position
 
         return info
