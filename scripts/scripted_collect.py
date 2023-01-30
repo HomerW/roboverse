@@ -5,10 +5,30 @@ import roboverse
 from roboverse.policies import policies
 import argparse
 from tqdm import tqdm
+from multiprocessing import Pool
 
 from roboverse.utils import get_timestamp
 
 EPSILON = 0.1
+
+
+def get_data_save_directory(args):
+    data_save_directory = args.save_directory
+
+    data_save_directory += "/{}".format(args.env_name)
+
+    if args.num_trajectories > 1000:
+        data_save_directory += "_{}K".format(int(args.num_trajectories / 1000))
+    else:
+        data_save_directory += "_{}".format(args.num_trajectories)
+
+    if args.save_all:
+        data_save_directory += "_save_all"
+
+    data_save_directory += "_noise_{}".format(args.noise)
+    data_save_directory += "_{}".format(get_timestamp())
+
+    return data_save_directory
 
 
 def tensor_feature(value):
@@ -20,7 +40,7 @@ def tensor_feature(value):
 def add_transition(
     traj, observation, action, reward, info, agent_info, done, next_observation, img_dim
 ):
-    if 'image' in observation:
+    if "image" in observation:
         observation["image"] = np.reshape(
             np.uint8(observation["image"] * 255.0), (img_dim, img_dim, 3)
         )
@@ -91,12 +111,7 @@ def collect_one_traj(env, policy, num_timesteps, noise, accept_trajectory_key):
     return traj, success, num_steps
 
 
-def main(args):
-    timestamp = get_timestamp()
-    data_save_path = args.save_directory
-    if not tf.io.gfile.exists(data_save_path):
-        tf.io.gfile.makedirs(data_save_path)
-
+def collect(args, save_path, num_traj):
     env = roboverse.make(args.env_name, gui=args.gui, transpose_image=False)
 
     data = []
@@ -113,9 +128,9 @@ def main(args):
     num_attempts = 0
     accept_trajectory_key = args.accept_trajectory_key
 
-    progress_bar = tqdm(total=args.num_trajectories)
+    progress_bar = tqdm(total=num_traj)
 
-    while num_saved < args.num_trajectories:
+    while num_saved < num_traj:
         num_attempts += 1
         traj, success, num_steps = collect_one_traj(
             env, policy, args.num_timesteps, args.noise, accept_trajectory_key
@@ -139,37 +154,45 @@ def main(args):
     progress_bar.close()
     print("success rate: {}".format(num_success / (num_attempts)))
 
-    path = tf.io.gfile.join(
-        data_save_path, "scripted_{}_{}.tfrecord".format(args.env_name, timestamp)
-    )
-    print(path)
-
-    with tf.io.TFRecordWriter(path) as writer:
+    with tf.io.TFRecordWriter(save_path) as writer:
         for traj in data:
             truncates = np.zeros(len(traj["actions"]), dtype=np.bool_)
             truncates[-1] = True
             steps_existing = np.arange(len(traj["actions"]), dtype=np.int32)
             steps_remaining = steps_existing[::-1]
 
-
             infos = {}
             for key in data[0]["env_infos"][0]:
-                infos[f"infos/{key}"] = tensor_feature(np.array([i[key] for i in traj["env_infos"]]))
+                infos[f"infos/{key}"] = tensor_feature(
+                    np.array([i[key] for i in traj["env_infos"]])
+                )
 
             example = tf.train.Example(
                 features=tf.train.Features(
                     feature={
                         "observations/images0": tensor_feature(
-                            np.array([o["image"] for o in traj["observations"]], dtype=np.uint8)
+                            np.array(
+                                [o["image"] for o in traj["observations"]],
+                                dtype=np.uint8,
+                            ),
                         ),
                         "observations/state": tensor_feature(
-                            np.array([o["state"] for o in traj["observations"]], dtype=np.float32)
+                            np.array(
+                                [o["state"] for o in traj["observations"]],
+                                dtype=np.float32,
+                            )
                         ),
                         "next_observations/images0": tensor_feature(
-                            np.array([o["image"] for o in traj["next_observations"]], dtype=np.uint8)
+                            np.array(
+                                [o["image"] for o in traj["next_observations"]],
+                                dtype=np.uint8,
+                            ),
                         ),
                         "next_observations/state": tensor_feature(
-                            np.array([o["state"] for o in traj["next_observations"]], dtype=np.float32)
+                            np.array(
+                                [o["state"] for o in traj["next_observations"]],
+                                dtype=np.float32,
+                            )
                         ),
                         "actions": tensor_feature(
                             np.array(traj["actions"], dtype=np.float32)
@@ -180,15 +203,32 @@ def main(args):
                         "truncates": tensor_feature(truncates),
                         "steps_existing": tensor_feature(steps_existing),
                         "steps_remaining": tensor_feature(steps_remaining),
-                        **infos
+                        **infos,
                     }
                 )
             )
             writer.write(example.SerializeToString())
 
 
-if __name__ == "__main__":
+def main(args):
+    save_directory = get_data_save_directory(args)
+    if not tf.io.gfile.exists(save_directory):
+        tf.io.gfile.makedirs(save_directory)
 
+    worker_args = []
+    for i in range(args.num_parallel_threads):
+        worker_args.append((
+            args,
+            tf.io.gfile.join(save_directory, f"{i}.tfrecord"),
+            args.num_trajectories // args.num_parallel_threads
+            + int(i < args.num_trajectories % args.num_parallel_threads),
+        ))
+
+    with Pool(args.num_parallel_threads) as p:
+        p.starmap(collect, worker_args)
+
+
+if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("-e", "--env-name", type=str, required=True)
     parser.add_argument("-pl", "--policy-name", type=str, required=True)
@@ -197,8 +237,8 @@ if __name__ == "__main__":
     parser.add_argument("-t", "--num-timesteps", type=int, required=True)
     parser.add_argument("--save-all", action="store_true", default=False)
     parser.add_argument("--gui", action="store_true", default=False)
-    parser.add_argument("-o", "--target-object", type=str)
     parser.add_argument("-d", "--save-directory", type=str, default="")
+    parser.add_argument("-p", "--num-parallel-threads", type=int, default=10)
     parser.add_argument("--noise", type=float, default=0.1)
     args = parser.parse_args()
 
