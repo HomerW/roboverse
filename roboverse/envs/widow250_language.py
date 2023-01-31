@@ -11,9 +11,17 @@ import os.path as osp
 import pybullet as p
 import numpy as np
 import random
+import re
+import itertools
 
 MAX_OBJECTS = 20
 
+REL_POS = dict(
+    left=(1., 0., 0.),
+    right=(-1., 0., 0.),
+    front=(0., 1., 0.),
+    back=(0., -1., 0.),
+) 
 
 class LanguageTask:
     def __init__(self, object_pos, container_pos, target, goal, rel):
@@ -21,7 +29,7 @@ class LanguageTask:
         assert target in object_pos
         assert not (set(object_pos) & set(container_pos))
         assert rel is None or goal in object_pos
-        assert goal not in object_pos or rel in ["left", "right", "front"]
+        assert goal not in object_pos or rel in REL_POS
 
         self.object_pos = object_pos
         self.container_pos = container_pos
@@ -36,16 +44,12 @@ class LanguageTask:
         else:
             self.description = f'move the {self.target} onto the {self.goal}'
 
-        self.description = self.description.replace('_', ' ')
+        self.description = self.description.replace("_", " ")
 
         if rel is None:
             self.goal_pos = np.array(self.container_pos[self.goal])
         else:
-            delta = dict(
-                left=(1., 0., 0.),
-                right=(-1., 0., 0.),
-                front=(0., 1., 0.),
-            )[self.rel]
+            delta = REL_POS[self.rel]
             self.goal_pos = np.array(self.object_pos[self.goal]) + np.array(delta) / 15
 
     def __str__(self):
@@ -60,9 +64,22 @@ class LanguageTask:
         objects = random.sample(list(env.possible_objects), env.num_objects)
         target = objects[0]
         goal = np.random.choice(objects + containers)
-        rel = random.choice(["left", "right", "front"]) if goal in objects else None
+        rel = random.choice(list(REL_POS)) if goal in objects else None
 
         return cls.randomize_locations(env, objects, containers, target, goal, rel)
+
+    @classmethod
+    def enumerate(cls, env):
+        for obj1 in env.possible_objects:
+            for obj2 in env.possible_objects:
+                for rel in REL_POS:
+                    if obj1 == obj2:
+                        yield f"move the {obj1} toward the {rel}".replace("_", " ")
+                    else:
+                        yield f"move the {obj1} to the {rel} of the {obj2}".replace("_", " ")
+        for obj in env.possible_objects:
+            for cont in env.possible_containers:
+                yield f"move the {obj} onto the {cont}".replace("_", " ")
 
     @classmethod
     def randomize_locations(cls, env, objects, containers, target, goal, rel):
@@ -91,23 +108,25 @@ class LanguageTask:
         match3 = re.search(r"^move the ([a-zA-Z ]+) onto the ([a-zA-Z ]+)$", description)
 
         if match1:
-            target = match1.group(1)
+            target = match1.group(1).replace(" ", "_")
             rel = match1.group(2)
-            goal = match1.group(3)
+            goal = match1.group(3).replace(" ", "_")
             objects = [target, goal] + random.sample(set(env.possible_objects) - {target, goal}, env.num_objects - 2)
-            containers = random.sample(env.possible_containers, env.num_containers)
+            containers = random.sample(set(env.possible_containers), env.num_containers)
         elif match2:
-            target = match2.group(1)
+            target = match2.group(1).replace(" ", "_")
             rel = match2.group(2)
-            goal = match2.group(1)
+            goal = match2.group(1).replace(" ", "_")
             objects = [target] + random.sample(set(env.possible_objects) - {target}, env.num_objects - 1)
-            containers = random.sample(env.possible_containers, env.num_containers)
+            containers = random.sample(set(env.possible_containers), env.num_containers)
         elif match3:
-            target = match3.group(1)
+            target = match3.group(1).replace(" ", "_")
             rel = None
-            goal = match3.group(2)
+            goal = match3.group(2).replace(" ", "_")
             objects = [target] + random.sample(set(env.possible_objects) - {target}, env.num_objects - 1)
             containers = [goal] + random.sample(set(env.possible_containers) - {goal}, env.num_containers - 1)
+        else:
+            return None
 
         return cls.randomize_locations(env, objects, containers, target, goal, rel)
 
@@ -136,21 +155,20 @@ class LanguageTask:
         env.original_object_positions = [*self.object_pos.values(), *self.container_pos.values()]
 
 
-
 class Widow250LanguageEnv(Widow250Env):
 
     def __init__(self,
                  object_position_high=(.7, .27, -.30),
                  object_position_low=(.5, .18, -.30),
-                 min_distance_between_objects=0.11,
-                 min_distance_from_object=0.11,
+                 min_distance_between_objects=0.1,
+                 min_distance_from_object=0.09,
                  place_success_height_threshold=-0.32,
                  place_success_radius_threshold=0.05,
                  start_object_in_gripper=False,
                  show_place_target=False,
                  random_object_pose=False,
                  num_objects=2,
-                 num_containers=1,
+                 num_containers=2,
                  possible_objects=TRAIN_OBJECTS[:10],
                  possible_containers=TRAIN_CONTAINERS[:3],
                  observation_img_dim=128,

@@ -742,6 +742,10 @@ for obj in list(BULLET_OBJECT_SPECS):
         BULLET_OBJECT_SPECS[obj.replace('_pushable', '')] = BULLET_OBJECT_SPECS[obj]
     if 'cuboid' in obj:
         BULLET_OBJECT_SPECS[obj.replace('cuboid', 'cube')] = BULLET_OBJECT_SPECS[obj]
+    if obj == 'pan_tefal':
+        BULLET_OBJECT_SPECS['tefal_pan'] = BULLET_OBJECT_SPECS[obj]
+    if obj == 'bowl_small':
+        BULLET_OBJECT_SPECS['small_bowl'] = BULLET_OBJECT_SPECS[obj]
 
 PROGRAMMATIC_OBJECT_SPECS = dict(
     visual=dict(

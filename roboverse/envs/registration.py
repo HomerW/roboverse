@@ -500,7 +500,7 @@ ENVIRONMENT_SPECS = (
                    'load_tray': False,
 
                    'possible_objects': ['red_cube', 'green_cube', 'blue_cube', 'duck', 'spam', 'spoon', 'pepsi_can', 'tomato_can'],
-                   'possible_containers': ['plate', 'bowl_small', 'tray', 'pan_tefal', 'basket'],
+                   'possible_containers': ['plate', 'small_bowl', 'tray', 'basket', 'open_box'],
 
                    }
     },
