@@ -396,7 +396,7 @@ CUBOID_OBJECTS = [
     'magenta_cuboid',
 ]
 
-CAN_OBJECTS = [
+COLORED_CANS = [
     'white_can_pushable',
     'black_can_pushable',
     'red_can_pushable',
@@ -405,6 +405,9 @@ CAN_OBJECTS = [
     'yellow_can_pushable',
     'cyan_can_pushable',
     'magenta_can_pushable',
+]
+
+TEXTURED_CANS = [
     'tuna_fish_can_pushable',
     'tuna_fish_can_tall_pushable',
     'pepsi_can_pushable',
@@ -413,10 +416,13 @@ CAN_OBJECTS = [
     'decaf_can_pushable',
 ]
 
-TRAIN_CONTAINER_OBJECTS = [
+BOWLS = [
     'yellowbowl_pushable',
     'turqoisebowl_pushable',
     'ramekinbowl_pushable',
+]
+
+COLORED_POTS = [
     'white_pot_pushable',
     'black_pot_pushable',
     'red_pot_pushable',
@@ -426,8 +432,6 @@ TRAIN_CONTAINER_OBJECTS = [
     'cyan_pot_pushable',
     'magenta_pot_pushable',
 ]
-
-DIVERSE_PUSH_TRAIN_OBJECTS = list(CYLINDER_COLORS.keys()) + CAN_OBJECTS
 
 OBJECT_ORIENTATIONS = {
     'conic_cup': (0, 0, 1, 0),

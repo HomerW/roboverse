@@ -82,6 +82,26 @@ def apply_action_ik(target_ee_pos, target_ee_quat, target_gripper_state,
         p.stepSimulation()
 
 
+def apply_gripper_action_ik(
+    target_gripper_state, robot_id, movable_joints, num_sim_steps=5
+):
+    # set gripper action
+    p.setJointMotorControl2(robot_id,
+                            movable_joints[-2],
+                            controlMode=p.POSITION_CONTROL,
+                            targetPosition=target_gripper_state[0],
+                            force=500,
+                            positionGain=0.03)
+    p.setJointMotorControl2(robot_id,
+                            movable_joints[-1],
+                            controlMode=p.POSITION_CONTROL,
+                            targetPosition=target_gripper_state[1],
+                            force=500,
+                            positionGain=0.03)
+
+    for _ in range(num_sim_steps):
+        p.stepSimulation()
+
 def reset_robot(robot_id, reset_joint_indices, reset_joint_values):
     assert len(reset_joint_indices) == len(reset_joint_values)
     for i, value in zip(reset_joint_indices, reset_joint_values):

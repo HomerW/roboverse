@@ -61,12 +61,12 @@ class PickPlace:
             action_xyz[0] = 0.
             action_xyz[1] = 0.
             action_angles = [0., 0., 0.]
-            action_gripper = [0.]
+            action_gripper = [1.]
         elif self.place_attempted:
             # move to neutral
             action_xyz = (self.env.ee_pos_init - ee_pos) * self.xyz_action_scale
             action_angles = [0., 0., 0.]
-            action_gripper = [0.]
+            action_gripper = [1.]
         elif gripper_pickpoint_dist > 0.02 and self.env.is_gripper_open:
             # move near the object
             action_xyz = (self.pick_point - ee_pos) * self.xyz_action_scale
@@ -74,12 +74,12 @@ class PickPlace:
             if xy_diff > 0.03:
                 action_xyz[2] = 0.0
             action_angles = [0., 0., 0.]
-            action_gripper = [0.0]
+            action_gripper = [1.]
         elif self.env.is_gripper_open:
             # near the object enough, performs grasping action
             action_xyz = (self.pick_point  - ee_pos) * self.xyz_action_scale
             action_angles = [0., 0., 0.]
-            action_gripper = [-0.7]
+            action_gripper = [0.0]
         elif not self.object_lifted:
             # lifting objects above the height threshold for picking
             action_xyz = (self.env.ee_pos_init - ee_pos) * self.xyz_action_scale
@@ -94,7 +94,7 @@ class PickPlace:
             # already moved above the container; drop object
             action_xyz = (0., 0., 0.)
             action_angles = [0., 0., 0.]
-            action_gripper = [0.7]
+            action_gripper = [1.]
             self.place_attempted = True
 
         agent_info = dict(place_attempted=self.place_attempted, done=done)
@@ -161,6 +161,7 @@ class PickPlaceWrist:
         self.wrist_target_achieved = False
         self.gripper_lifted_before_pick = False
         self.gripper_lifted_after_place = False
+        self.num_close_actions = 0
 
     def get_action(self):
         # Update drop point
@@ -206,7 +207,7 @@ class PickPlaceWrist:
             action_xyz[0] = 0.
             action_xyz[1] = 0.
             action_angles = [0., 0., 0.]
-            action_gripper = [0.]
+            action_gripper = [1.]
         elif self.place_attempted:
             # move to neutral
             if gripper_neutral_dist < 0.02:
@@ -214,12 +215,12 @@ class PickPlaceWrist:
             else:
                 action_xyz = (self.neutral_pos - ee_pos) * self.xyz_action_scale
             action_angles = [0., 0., 0.]
-            action_gripper = [0.]
+            action_gripper = [1.]
         elif not self.gripper_lifted_before_pick:
             action_xyz = [0., 0., 1.0]
             action_angles = [0., 0., 0.]
-            action_gripper = [0.]
-        elif gripper_pickpoint_dist > 0.02 and self.env.is_gripper_open:
+            action_gripper = [1.]
+        elif gripper_pickpoint_dist > 0.02 and self.num_close_actions < 8:
             # move near the object
             action_xyz = (self.pick_point - ee_pos) * self.xyz_action_scale
             xy_diff = np.linalg.norm(action_xyz[:2] / self.xyz_action_scale)
@@ -230,17 +231,18 @@ class PickPlaceWrist:
             else:
                 wrist_action = (self.wrist_target - wrist_pos) * self.wrist_action_scale
             action_angles = [0., 0., wrist_action]
-            action_gripper = [0.0]
+            action_gripper = [1.]
         elif not self.wrist_target_achieved:
             action_xyz = [0., 0., 0.]
             wrist_action = (self.wrist_target - wrist_pos) * self.wrist_action_scale
             action_angles = [0., 0., wrist_action]
-            action_gripper = [0.0]
-        elif self.env.is_gripper_open:
+            action_gripper = [1.]
+        elif self.num_close_actions < 8:
             # near the object enough, performs grasping action
             action_xyz = (self.pick_point  - ee_pos) * self.xyz_action_scale
             action_angles = [0., 0., 0.]
-            action_gripper = [-0.7]
+            action_gripper = [0.]
+            self.num_close_actions += 1
         elif not self.object_lifted:
             # lifting objects above the height threshold for picking
             action_xyz = [0., 0., 1.0]
@@ -257,8 +259,12 @@ class PickPlaceWrist:
             # already moved above the container; drop object
             action_xyz = (0., 0., 0.)
             action_angles = [0., 0., 0.]
-            action_gripper = [0.7]
+            action_gripper = [1.]
             self.place_attempted = True
+        
+        if not (self.wrist_target_achieved and gripper_pickpoint_dist > 0.02 and self.num_close_actions < 8) \
+            and self.env.open_gripper_on_ts > self.env.ts:
+            action_gripper = [0.]
 
         agent_info = dict(place_attempted=self.place_attempted, done=done)
         if self.use_neutral_action:
@@ -353,14 +359,14 @@ class Push:
             else:
                 wrist_action = (self.wrist_target - wrist_pos) * self.wrist_action_scale
             action_angles = [0., 0., wrist_action]
-            action_gripper = [0.0]
+            action_gripper = [1.]
             self.near_object_try_counter += 1
         elif obj_droppoint_dist_xy > 0.02 and not self.target_reached:
             # now need to move towards the target
             self.object_reached = True
             action_xyz = (self.drop_point - ee_pos) * self.xyz_action_scale
             action_angles = [0., 0., 0.]
-            action_gripper = [0.]
+            action_gripper = [1.]
         elif not gripper_lifted_after_place:
             # lifting gripper straight up after placing to avoid knocking the object
             self.target_reached = True
@@ -368,13 +374,13 @@ class Push:
             action_xyz[0] = 0.
             action_xyz[1] = 0.
             action_angles = [0., 0., 0.]
-            action_gripper = [0.]
+            action_gripper = [1.]
         else:
             # move to neutral
             action_xyz = (self.neutral_pos - ee_pos) * self.xyz_action_scale
             wrist_action = (180 - wrist_pos) * self.wrist_action_scale
             action_angles = [0., 0., wrist_action]
-            action_gripper = [0.]
+            action_gripper = [1.]
 
         agent_info = dict(done=done)
         if self.use_neutral_action:
@@ -478,8 +484,8 @@ class PickPlaceOpen:
             else:
                 action_xyz = [0., 0., 0.]
                 action_angles = [0., 0., 0.]
-                action_gripper = [0.0]
-                neutral_action = [0.7]
+                action_gripper = [1.]
+                neutral_action = [1.]
                 self.neutral_taken = True
         elif gripper_pickpoint_dist > 0.02 and self.env.is_gripper_open:
             # move near the object
@@ -488,27 +494,27 @@ class PickPlaceOpen:
             if xy_diff > 0.03:
                 action_xyz[2] = 0.0
             action_angles = [0., 0., 0.]
-            action_gripper = [0.0]
+            action_gripper = [1.]
         elif self.env.is_gripper_open:
             # near the object enough, performs grasping action
             action_xyz = (self.pick_point  - ee_pos) * self.xyz_action_scale
             action_angles = [0., 0., 0.]
-            action_gripper = [-0.7]
+            action_gripper = [0.]
         elif not object_lifted:
             # lifting objects above the height threshold for picking
             action_xyz = (self.env.ee_pos_init - ee_pos) * self.xyz_action_scale
             action_angles = [0., 0., 0.]
-            action_gripper = [0.]
+            action_gripper = [1.]
         elif gripper_droppoint_dist > 0.02:
             # lifted, now need to move towards the container
             action_xyz = (self.drop_point - ee_pos) * self.xyz_action_scale
             action_angles = [0., 0., 0.]
-            action_gripper = [0.]
+            action_gripper = [1.]
         else:
             # already moved above the container; drop object
             action_xyz = [0., 0., 0.]
             action_angles = [0., 0., 0.]
-            action_gripper = [0.7]
+            action_gripper = [1.]
             self.place_attempted = True
 
         agent_info = dict(place_attempted=self.place_attempted, done=done)

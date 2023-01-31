@@ -53,6 +53,7 @@ class Widow250Env(gym.Env, Serializable):
 
                  use_neutral_action=False,
                  neutral_gripper_open=True,
+                 random_gripper_close=False,
 
                  xyz_action_scale=0.2,
                  abc_action_scale=20.0,
@@ -88,6 +89,7 @@ class Widow250Env(gym.Env, Serializable):
 
         self.use_neutral_action = use_neutral_action
         self.neutral_gripper_open = neutral_gripper_open
+        self.random_gripper_close = random_gripper_close
 
         self.gui = gui
 
@@ -187,13 +189,27 @@ class Widow250Env(gym.Env, Serializable):
             self.robot_id,
             self.reset_joint_indices,
             self.reset_joint_values)
-        if self.random_ee_pose:
+        assert not (self.random_gripper_close and self.random_ee_pose)
+        if self.random_gripper_close:
+            if np.random.choice(2) == 0:
+                self.open_gripper_on_ts = np.random.randint(6)
+                init_gripper_state = GRIPPER_CLOSED_STATE
+            else:
+                self.open_gripper_on_ts = 0
+                init_gripper_state = GRIPPER_OPEN_STATE
+
+            bullet.apply_gripper_action_ik(
+                init_gripper_state, self.robot_id,
+                self.movable_joints, num_sim_steps=self.num_sim_steps_reset)
+        elif self.random_ee_pose:
             init_pos = np.random.uniform(self.ee_pos_low, self.ee_pos_high)
             init_pos[2] = -.34
             init_quat = control.deg_to_quat([90, 0, np.random.uniform(0, 360)])
             if np.random.choice(2) == 0:
+                self.open_gripper_on_ts = np.random.randint(6)
                 init_gripper_state = GRIPPER_CLOSED_STATE
             else:
+                self.open_gripper_on_ts = 0
                 init_gripper_state = GRIPPER_OPEN_STATE
 
             bullet.apply_action_ik(
@@ -205,12 +221,14 @@ class Widow250Env(gym.Env, Serializable):
                 rest_pose=RESET_JOINT_VALUES,
                 joint_range=JOINT_RANGE,
                 num_sim_steps=self.num_sim_steps_reset)
-
-        self.is_gripper_open = True  # TODO(avi): Clean this up
+        else:
+            self.open_gripper_on_ts = 0
 
         self.initial_object_position = dict()
         for object_name, object_id in self.objects.items():
             self.initial_object_position[object_name] = bullet.get_object_position(object_id)[0]
+        
+        self.ts = 0
 
         return self.get_observation()
 
@@ -247,24 +265,13 @@ class Widow250Env(gym.Env, Serializable):
                                     self.gripper_action_scale * gripper_action]
 
         elif self.control_mode == 'discrete_gripper':
-            if gripper_action > 0.5 and not self.is_gripper_open:
-                num_sim_steps = self.num_sim_steps_discrete_action
+            num_sim_steps = self.num_sim_steps
+            if gripper_action > 0.5:
                 target_gripper_state = GRIPPER_OPEN_STATE
-                self.is_gripper_open = True  # TODO(avi): Clean this up
-
-            elif gripper_action < -0.5 and self.is_gripper_open:
-                num_sim_steps = self.num_sim_steps_discrete_action
-                target_gripper_state = GRIPPER_CLOSED_STATE
-                self.is_gripper_open = False  # TODO(avi): Clean this up
             else:
-                num_sim_steps = self.num_sim_steps
-                if self.is_gripper_open:
-                    target_gripper_state = GRIPPER_OPEN_STATE
-                else:
-                    target_gripper_state = GRIPPER_CLOSED_STATE
-                # target_gripper_state = gripper_state
+                target_gripper_state = GRIPPER_CLOSED_STATE
         else:
-            raise NotImplementedError
+            raise NotImplementedError        
 
         target_ee_pos = np.clip(target_ee_pos, self.ee_pos_low,
                                 self.ee_pos_high)
@@ -292,6 +299,8 @@ class Widow250Env(gym.Env, Serializable):
                     self.robot_id,
                     self.reset_joint_indices,
                     RESET_JOINT_VALUES_GRIPPER_CLOSED)
+
+        self.ts += 1
 
         info = self.get_info()
         reward = self.get_reward(info)
