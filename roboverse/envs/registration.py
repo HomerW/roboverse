@@ -339,7 +339,6 @@ ENVIRONMENT_SPECS = (
             'ee_pos_low': (.43, 0.12, -.34),
             'random_ee_pose': False,
             'num_sim_steps_reset': 200,
-            'random_gripper_close': False,
             # 'show_place_target': True
         }
     },
@@ -370,7 +369,6 @@ ENVIRONMENT_SPECS = (
             'ee_pos_low': (.43, 0.12, -.34),
             'random_ee_pose': False,
             'num_sim_steps_reset': 200,
-            'random_gripper_close': True,
             # 'show_place_target': True
         }
     },
@@ -401,7 +399,6 @@ ENVIRONMENT_SPECS = (
             'ee_pos_low': (.43, 0.12, -.34),
             'random_ee_pose': False,
             'num_sim_steps_reset': 200,
-            'random_gripper_close': True,
             # 'show_place_target': True
         }
     },

@@ -154,9 +154,6 @@ class Widow250TableArrangementEnv(Widow250Env):
 
             self.target_object = target_object
         
-        ## HARDCODE PATRICK
-        self.target_object = self.pickplace_object_name
-        
         ## Important: Order Matters
         self.object_names = [
             self.push_object_name,
