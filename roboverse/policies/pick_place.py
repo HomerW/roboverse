@@ -105,6 +105,7 @@ class PickPlace:
         else:
             action = np.concatenate(
                 (action_xyz, action_angles, action_gripper))
+        action = np.clip(action, -1, 1)
         return action, agent_info
 
 class PickPlaceWrist:
@@ -268,6 +269,7 @@ class PickPlaceWrist:
         else:
             action = np.concatenate(
                 (action_xyz, action_angles, action_gripper))
+        action = np.clip(action, -1, 1)
         return action, agent_info
 
 class Push:
@@ -384,6 +386,7 @@ class Push:
         else:
             action = np.concatenate(
                 (action_xyz, action_angles, action_gripper))
+        action = np.clip(action, -1, 1)
         return action, agent_info
 
 class PickPlacePush:
@@ -422,9 +425,10 @@ class PickPlaceWristPush:
     
     def get_action(self):
         if "cylinder" in self.object_to_target or "pushable" in self.object_to_target:
-            return self.push_policy.get_action()
+            action = self.push_policy.get_action()
         else:
-            return self.pick_place_policy.get_action()
+            action = self.pick_place_policy.get_action()
+        return action
 
 
 class PickPlaceOpen:
