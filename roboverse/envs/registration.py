@@ -319,7 +319,7 @@ ENVIRONMENT_SPECS = (
             'reward_type': 'pick_place',
             'control_mode': 'discrete_gripper',
             'observation_img_dim': 128,
-            'possible_container_objects': ['steel_pot_pushable'],
+            'possible_container_objects': ['orange_pot_pushable'], #['steel_pot_pushable'],
             'possible_utensil_objects': ['spoon'],
             'possible_pickplace_objects': ['spam'],
             'possible_push_objects': ['tomato_can_pushable'],

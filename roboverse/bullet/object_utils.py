@@ -647,6 +647,38 @@ BULLET_OBJECT_SPECS = dict(
         globalScaling=0.8,
         useFixedBase=0,
     ),
+    purple_pot_pushable=dict(
+        fileName=os.path.join(
+            BASE_ASSET_PATH, 'pot/purple_pot.urdf'),
+        basePosition=(.65, 0.3, -.3),
+        baseOrientation=(0, 0, 0.707107, 0.707107),
+        globalScaling=0.8,
+        useFixedBase=0,
+    ),
+    lime_pot_pushable=dict(
+        fileName=os.path.join(
+            BASE_ASSET_PATH, 'pot/lime_pot.urdf'),
+        basePosition=(.65, 0.3, -.3),
+        baseOrientation=(0, 0, 0.707107, 0.707107),
+        globalScaling=0.8,
+        useFixedBase=0,
+    ),
+    maroon_pot_pushable=dict(
+        fileName=os.path.join(
+            BASE_ASSET_PATH, 'pot/maroon_pot.urdf'),
+        basePosition=(.65, 0.3, -.3),
+        baseOrientation=(0, 0, 0.707107, 0.707107),
+        globalScaling=0.8,
+        useFixedBase=0,
+    ),
+    orange_pot_pushable=dict(
+        fileName=os.path.join(
+            BASE_ASSET_PATH, 'pot/orange_pot.urdf'),
+        basePosition=(.65, 0.3, -.3),
+        baseOrientation=(0, 0, 0.707107, 0.707107),
+        globalScaling=0.8,
+        useFixedBase=0,
+    ),
     yellowbowl_pushable=dict(
         fileName=os.path.join(
             BASE_ASSET_PATH, 'dishware/yellowbowl/yellowbowl.urdf'),
