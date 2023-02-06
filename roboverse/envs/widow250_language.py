@@ -90,7 +90,7 @@ class LanguageTask:
         container_position, original_object_positions = \
             object_utils.generate_object_positions_v3(
                 extra_positions, env.object_position_low, env.object_position_high,
-                env.object_position_low, env.object_position_low,
+                env.object_position_low, env.object_position_high,
                 min_distance=env.min_distance_between_objects,
                 min_distance_target=env.min_distance_from_object
             )
