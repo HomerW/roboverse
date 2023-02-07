@@ -21,15 +21,16 @@ REL_POS = dict(
     right=(-1., 0., 0.),
     front=(0., 1., 0.),
     back=(0., -1., 0.),
-) 
+)
 
 class LanguageTask:
     def __init__(self, object_pos, container_pos, target, goal, rel):
         assert goal in container_pos or goal in object_pos
         assert target in object_pos
         assert not (set(object_pos) & set(container_pos))
-        assert rel is None or goal in object_pos
-        assert goal not in object_pos or rel in REL_POS
+        assert rel in ['onto', 'toward'] or goal in object_pos
+        assert target != goal or rel != 'toward'
+        assert goal not in object_pos or rel in REL_POS or rel == 'toward'
 
         self.object_pos = object_pos
         self.container_pos = container_pos
@@ -37,7 +38,9 @@ class LanguageTask:
         self.goal = goal
         self.rel = rel
 
-        if goal == target:
+        if rel == 'toward':
+            self.description = f'move the {self.target} toward the {self.goal}'
+        elif goal == target:
             self.description = f'move the {self.target} toward the {self.rel}'
         elif goal in object_pos:
             self.description = f'move the {self.target} to the {self.rel} of the {self.goal}'
@@ -46,8 +49,11 @@ class LanguageTask:
 
         self.description = self.description.replace("_", " ")
 
-        if rel is None:
+        if rel == 'onto':
             self.goal_pos = np.array(self.container_pos[self.goal])
+        elif rel == 'toward':
+            toward_pos = self.object_pos.get(self.goal, self.container_pos.get(self.goal))
+            self.goal_pos = (np.array(toward_pos) + np.array(object_pos[self.target])) / 2
         else:
             delta = REL_POS[self.rel]
             self.goal_pos = np.array(self.object_pos[self.goal]) + np.array(delta) / 15
@@ -63,8 +69,8 @@ class LanguageTask:
         containers = random.sample(list(env.possible_containers), env.num_containers)
         objects = random.sample(list(env.possible_objects), env.num_objects)
         target = objects[0]
-        goal = np.random.choice(objects + containers)
-        rel = random.choice(list(REL_POS)) if goal in objects else None
+        goal = np.random.choice(2 * objects + containers)
+        rel = random.choice(list(REL_POS if goal in objects else ['onto']) + (['toward'] if target != goal else []))
 
         return cls.randomize_locations(env, objects, containers, target, goal, rel)
 
@@ -77,9 +83,12 @@ class LanguageTask:
                         yield f"move the {obj1} toward the {rel}".replace("_", " ")
                     else:
                         yield f"move the {obj1} to the {rel} of the {obj2}".replace("_", " ")
+                if obj1 != obj2:
+                    yield f"move the {obj1} toward the {obj2}".replace("_", " ")
         for obj in env.possible_objects:
             for cont in env.possible_containers:
                 yield f"move the {obj} onto the {cont}".replace("_", " ")
+                yield f"move the {obj} toward the {cont}".replace("_", " ")
 
     @classmethod
     def randomize_locations(cls, env, objects, containers, target, goal, rel):
@@ -96,8 +105,15 @@ class LanguageTask:
             )
         original_object_positions.append(container_position)
 
-        object_pos = {obj: pos for obj, pos in zip(objects, original_object_positions[:env.num_objects])}
-        container_pos = {cont: pos for cont, pos in zip(containers, original_object_positions[env.num_objects:])}
+        object_pos = {
+            obj: list(pos) 
+            for obj, pos in zip(objects, original_object_positions[:env.num_objects])
+        }
+        container_pos = {
+            cont: list(pos) 
+            for cont, pos in 
+            zip(containers, original_object_positions[env.num_objects:])
+        }
 
         return cls(object_pos, container_pos, target, goal, rel)
 
@@ -111,22 +127,25 @@ class LanguageTask:
             target = match1.group(1).replace(" ", "_")
             rel = match1.group(2)
             goal = match1.group(3).replace(" ", "_")
-            objects = [target, goal] + random.sample(set(env.possible_objects) - {target, goal}, env.num_objects - 2)
-            containers = random.sample(set(env.possible_containers), env.num_containers)
         elif match2:
             target = match2.group(1).replace(" ", "_")
             rel = match2.group(2)
-            goal = match2.group(1).replace(" ", "_")
-            objects = [target] + random.sample(set(env.possible_objects) - {target}, env.num_objects - 1)
-            containers = random.sample(set(env.possible_containers), env.num_containers)
+            if rel in REL_POS:
+                goal = match2.group(1).replace(" ", "_")
+            else:
+                goal = rel
+                rel = 'toward'
         elif match3:
             target = match3.group(1).replace(" ", "_")
             rel = None
             goal = match3.group(2).replace(" ", "_")
-            objects = [target] + random.sample(set(env.possible_objects) - {target}, env.num_objects - 1)
-            containers = [goal] + random.sample(set(env.possible_containers) - {goal}, env.num_containers - 1)
         else:
             return None
+
+        objects = {target, goal} & set(env.possible_objects)
+        containers = {target, goal} & set(env.possible_containers)
+        objects = list(objects) + random.sample(set(env.possible_objects) - {target, goal}, env.num_objects - len(objects))
+        containers = list(containers) + random.sample(set(env.possible_containers) - {target, goal}, env.num_containers - len(containers))
 
         return cls.randomize_locations(env, objects, containers, target, goal, rel)
 
@@ -163,7 +182,7 @@ class Widow250LanguageEnv(Widow250Env):
                  min_distance_between_objects=0.1,
                  min_distance_from_object=0.09,
                  place_success_height_threshold=-0.32,
-                 place_success_radius_threshold=0.05,
+                 place_success_radius_threshold=0.02,
                  start_object_in_gripper=False,
                  show_place_target=False,
                  random_object_pose=False,
