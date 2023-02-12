@@ -129,7 +129,7 @@ class LanguageTask:
             goal = match1.group(3).replace(" ", "_")
         elif match2:
             target = match2.group(1).replace(" ", "_")
-            rel = match2.group(2)
+            rel = match2.group(2).replace(" ", "_")
             if rel in REL_POS:
                 goal = match2.group(1).replace(" ", "_")
             else:
@@ -137,7 +137,7 @@ class LanguageTask:
                 rel = 'toward'
         elif match3:
             target = match3.group(1).replace(" ", "_")
-            rel = None
+            rel = 'onto'
             goal = match3.group(2).replace(" ", "_")
         else:
             return None
