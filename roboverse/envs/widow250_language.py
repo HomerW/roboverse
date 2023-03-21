@@ -149,6 +149,65 @@ class LanguageTask:
 
         return cls.randomize_locations(env, objects, containers, target, goal, rel)
 
+    @classmethod
+    def to_vector(cls, description, env):
+        match1 = re.search(r"^move the ([a-zA-Z ]+) to the ([a-zA-Z ]+) of the ([a-zA-Z ]+)$", description)
+        match2 = re.search(r"^move the ([a-zA-Z ]+) toward the ([a-zA-Z ]+)$", description)
+        match3 = re.search(r"^move the ([a-zA-Z ]+) onto the ([a-zA-Z ]+)$", description)
+
+        vec = np.zeros(
+            3 + len(env.objects_list) \
+            + len(env.relations_list) + len(env.objects_list) \
+            + len(env.relations_list), \
+            + len(env.containers_list) , dtype=np.float32)
+
+        if match1:
+            target = match1.group(1).replace(" ", "_")
+            rel = match1.group(2)
+            goal = match1.group(3).replace(" ", "_")
+
+            target_idx = env.objects_list.index(target)
+            goal_idx = env.objects_list.index(goal)
+            rel_idx = env.relations_list.index(rel)
+
+            vec[0] = 1
+            vec[3 + target_idx] = 1
+            vec[3 + len(env.objects_list) + rel_idx] = 1
+            vec[3 + len(env.objects_list) + len(env.relations_list) + goal_idx] = 1
+
+        elif match2:
+            target = match2.group(1).replace(" ", "_")
+            rel = match2.group(2).replace(" ", "_")
+            if rel in REL_POS:
+                goal = match2.group(1).replace(" ", "_")
+            else:
+                goal = rel
+                rel = 'toward'
+
+            target_idx = env.objects_list.index(target)
+            rel_idx = env.relations_list.index(rel)
+
+            vec[1] = 1
+            vec[3 + target_idx] = 1
+            vec[3 + len(env.objects_list) + len(env.relations_list) + len(env.objects_list) + rel_idx] = 1
+
+        elif match3:
+            target = match3.group(1).replace(" ", "_")
+            rel = 'onto'
+            goal = match3.group(2).replace(" ", "_")
+
+            target_idx = env.objects_list.index(target)
+            goal_idx = env.containers_list.index(goal)
+
+            vec[2] = 1
+            vec[3 + target_idx] = 1
+            vec[3 + len(env.objects_list) + len(env.relations_list) + len(env.objects_list) + len(env.relations_list) + goal_idx] = 1
+
+        else:
+            return None
+
+        return vec 
+
     def spawn(self, env):
         for container_name, container_position in self.container_pos.items():
             container_config = CONTAINER_CONFIGS[container_name]
@@ -204,6 +263,10 @@ class Widow250LanguageEnv(Widow250Env):
         self.random_object_pose = random_object_pose
         self.num_containers = num_containers
         self.num_objects = num_objects
+
+        self.objects_list = list(self.possible_objects)
+        self.containers_list = list(self.possible_containers)
+        self.relations_list = list(REL_POS)
         
         self.task = None
         self.object_position_low = object_position_low
