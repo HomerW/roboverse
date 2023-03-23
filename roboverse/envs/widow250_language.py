@@ -150,6 +150,13 @@ class LanguageTask:
         return cls.randomize_locations(env, objects, containers, target, goal, rel)
 
     @classmethod
+    def task_dim(cls, env):
+        return 3 + len(env.objects_list) \
+            + len(env.relations_list) + len(env.objects_list) \
+            + len(env.relations_list) \
+            + len(env.containers_list)
+
+    @classmethod
     def to_vector(cls, description, env):
         match1 = re.search(r"^move the ([a-zA-Z ]+) to the ([a-zA-Z ]+) of the ([a-zA-Z ]+)$", description)
         match2 = re.search(r"^move the ([a-zA-Z ]+) toward the ([a-zA-Z ]+)$", description)
